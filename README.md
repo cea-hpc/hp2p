@@ -4,6 +4,8 @@
 
 The benchmark comes with a interactive GUI tool written in Python 2 with Matplotlib for post-processing the result.
 
+![alt tag](examples/gui-snapshot.png)
+
 ## Prerequisites
 
 Main program:
