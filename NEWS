@@ -1,0 +1,14 @@
+* Changes in hp2p-3.1 - 01/04/2016
+=====================
+
+   -- introduces SHIFT algorithm for choosing pairs
+   -- reporting results in standard output
+
+* Changes in hp2p-2.0 - 2012
+=====================
+
+   -- add python gui for visualization
+
+* Initial release hp2p-1.0 - 2010
+=====================
+
