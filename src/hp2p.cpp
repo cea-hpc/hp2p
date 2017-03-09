@@ -603,7 +603,7 @@ void heavy_p2p_main(config conf, mpi_config mpi_conf)
       io_snapshot(mpi_conf, conf, ltime, ttime, times, counts, conf.outname);
     }
     // Follow the run
-    if (rank == root && ((i % (nloops / 100) == 0)))
+    if (nloops >= 100 && rank == root && ((i % (nloops / 100)) == 0))
     {
       cout << 100 * ((double)i) / ((double)nloops) << "% done" << endl;
     }
