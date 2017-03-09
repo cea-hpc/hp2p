@@ -1,0 +1,149 @@
+#!/bin/env python
+import os
+import sys
+import time
+import datetime
+import numpy as np
+import plotly.offline as py
+import plotly.graph_objs as go
+from plotly import tools
+from optparse import OptionParser
+
+def header_html(clustername="unamed cluster"):
+    header='''
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>CEA-HPC - HP2P on {0} - {1}</title>
+  </head>
+  <style>
+    path {{
+    fill: black;
+    stroke: red;
+    stroke-linejoin: round;
+    }}
+  </style>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <body>
+'''.format(clustername,datetime.datetime.now().strftime("%d/%m/%Y at %H:%M:%S"))
+    return header
+
+def footer_html():
+    footer='''
+</body>
+</html>
+'''
+    return footer
+
+if __name__ == "__main__":
+    commandname=sys.argv[0]
+    if not sys.argv[1:]:
+        script_argv=['-h']
+    else:
+        script_argv=sys.argv[1:]
+
+    usage="%prog [options] OUTPUTNAME"
+    version="%prog 1.0"
+    description="Visualisation for HP2P Benchmark"
+    contact="****@cea.fr"
+    epilog="Please contact "+contact+" for help"
+    parser = OptionParser(usage=usage,
+                          version=version,
+                          description=description,
+                          epilog=epilog)
+    parser.add_option("-H","--hostfile",
+                      action="store",
+                      dest="hostfile",
+                      default=None,
+                      help="hostfile for corresponding \
+MPI rank in OpenMPI style [Default=%default]")
+    parser.add_option("-c", "--clustername",
+                      action="store",
+                      dest="clustername",
+                      default="unknown cluster",
+                      help="Name of the cluster")
+    parser.add_option("-o", "--output",
+                      action="store",
+                      dest="outfile",
+                      default=None,
+                      help="Name of html file")
+    (options, args) = parser.parse_args(script_argv)
+    hostfile = options.__dict__["hostfile"]
+    if (len(args) == 0):
+        print("No DATAFILE given!")
+        exit(0)
+    else:
+        outputname = args[0]
+        resfile = args[0]
+    clustername = options.__dict__["clustername"]
+    outfile = options.__dict__["outfile"]
+    if(outfile == None):
+        outfile = resfile+".html"
+    print("%s configuration:"%commandname)
+    print("   DATAFILE            : %s"%resfile)
+    print("   HOSTFILE            : %s"%hostfile)
+    print("   CLUSTER             : %s"%clustername)
+    print("   OUTPUTFILE          : %s"%outfile)
+    if(not os.path.exists(resfile)):
+        print("%s doesn't exist...Exiting"%resfile)
+        exit(0)
+    
+        
+    # Load data
+    a = np.fromfile(resfile, dtype="float64")
+    a = a.reshape((int(np.sqrt(a.size)), -1))
+
+    # Label nodes
+    nodes = []
+    if(hostfile == None):
+        for i in range(0,a.size):
+            nodes += ["rank_%d"%i]
+    else:
+        motif_rank='rank'
+        separator='='
+        with open(hostfile) as fd:
+            for line in fd:
+                if line.startswith(motif_rank):
+                    c,v = line[len(motif_rank)+1:-1].split(separator)
+                    nodes += [v]
+
+    # statistics
+    a_nz = a[a > 0]
+    stat_st = "<h1>Statistics</h1>"
+
+    idx_max = np.unravel_index(a.argmax(), a.shape)
+    np.fill_diagonal(a,a.max())
+    idx_min = np.unravel_index(a.argmin(), a.shape)
+    np.fill_diagonal(a,0)
+
+    stat_st += "Min. : %.3f MB/s between %s and %s" % (a_nz.min()/(1024*1024),nodes[idx_min[0]],nodes[idx_min[1]]) + "<br>"
+    stat_st += "Max. : %.3f MB/s between %s and %s" % (a_nz.max()/(1024*1024),nodes[idx_max[0]],nodes[idx_max[1]]) + "<br>"
+    stat_st += "Avg. : %.3f MB/s" %  (a_nz.mean()/(1024*1024)) + "<br>"
+    stat_st += "Std. : %.3f MB/s" % (a_nz.std()/(1024*1024)) + "<br>"
+
+    pltpy_data = go.Heatmap(
+            z=a/(1024.*1024.),
+            x=nodes,
+            y=nodes,
+            colorscale='Jet'
+        )
+    layout = go.Layout(
+        title="Bandwidth (MB/s)",
+        yaxis=dict(
+            autorange='reversed'
+        ),
+        autosize=True,
+        height=800,
+        width=800
+    )
+
+    fig = go.Figure(data=[pltpy_data],layout=layout)
+    url1 = py.plot(fig,include_plotlyjs=False, output_type='div')
+    with open(outfile,"w") as fd:
+        fd.write(header_html(clustername=clustername))
+        fd.write(stat_st)
+        fd.write("<center>\n")
+        fd.write(url1)
+        fd.write("</center>\n")
+        fd.write(footer_html())
