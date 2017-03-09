@@ -63,7 +63,6 @@ $ ./vizhp2p -H hostfile.txt first_test
 ```
 ## Contributing
 ## Authors
-Laurent Nguyen - <laurent.nguyen@cea.fr> <br />
 See the list of [AUTHORS](AUTHORS) who participated in this project.
 ## Contact
 
