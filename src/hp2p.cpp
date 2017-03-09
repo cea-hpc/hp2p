@@ -152,7 +152,7 @@ void display_help(char command[])
   cerr << "   -k freq         Iterations between snapshot" << endl;
   cerr << "   -s msg_size     Message size" << endl;
   cerr << "   -m nb_msg       Number of msg per comm" << endl;
-  cerr << "   -b bin_timer    Bin timer" << endl;
+  cerr << "   -b bin_timer    Generate Bin timer (false = 0 (default), true = 1)" << endl;
   cerr << "   -t max_time     Max duration" << endl;
   cerr << "   -c build        Algorithm to build couple ";
   cerr << "(random = 0 (default), mirroring shift = 1)" << endl;

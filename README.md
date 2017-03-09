@@ -43,7 +43,7 @@ $ hp2p.exe -h
     -k freq         Iterations between snapshot
     -s msg_size     Message size
     -m nb_msg       Number of msg per comm
-    -b bin_timer    Bin timer
+    -b bin_timer    Generate Bin timer (false = 0 (default), true = 1)
     -t max_time     Max duration
     -c build        Algorithm to build couple (random = 0 (default), mirroring shift = 1)
     -r hostfile     Hostfile
@@ -51,7 +51,7 @@ $ hp2p.exe -h
 ```
 The program is written in MPI:
 ```
- $ mpirun -n 32 ./hp2p.exe -n 1000 -s 1024 -m 10 -o first_test
+ $ mpirun -n 32 ./hp2p.exe -n 1000 -s 1024 -m 10 -b 1 -o first_test
 ```
 This command will launch the benchmark on 32 MPI processes and will run 1000 iterations. An iteration consists on a draw of random couples of MPI processes and then a phase where 10 successive communications of 1024 bytes will be performed.
 The benchmark aims to test the network, so it is better to launch the benchmark with 1 MPI process per node.
