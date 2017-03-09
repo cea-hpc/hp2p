@@ -58,9 +58,15 @@ The benchmark aims to test the network, so it is better to launch the benchmark 
 At the end of the execution, a *hostfile.txt* file and files prefixed with *first_test* are created.
 
 ## Visualization
+### Matplotlib GUI 
 ```
-$ ./vizhp2p -H hostfile.txt first_test
+$ vizhp2p -H hostfile.txt first_test
 ```
+### Plotly HTML
+```
+$ ./vizhp2p_html -H hostfile.txt -c "Unamed cluster" -o first_test.html first_test.bin
+```
+
 ## Contributing
 ## Authors
 See the list of [AUTHORS](AUTHORS) who participated in this project.
