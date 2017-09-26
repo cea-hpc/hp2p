@@ -235,7 +235,7 @@ void read_config(int argc, char *argv[], config *conf)
   default_config(conf);
 
   // Parsing command line
-  while ((opt = getopt(argc, argv, "hn:k:m:s:o:r:b:i:c:")) != -1)
+  while ((opt = getopt(argc, argv, "hn:k:m:s:o:r:b:i:c:t:")) != -1)
   {
     switch (opt)
     {
