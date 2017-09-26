@@ -6,6 +6,8 @@ The benchmark comes with a interactive GUI tool written in Python 2 with Matplot
 
 ![alt tag](examples/gui-snapshot.png)
 
+New: HTML report can be generated instead of Python GUI for portability. The following link gives an example of a report.
+
 [Plotly example](http://htmlpreview.github.io/?https://github.com/cea-hpc/hp2p/blob/master/examples/example.html)
 
 ## Prerequisites
