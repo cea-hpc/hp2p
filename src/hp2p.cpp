@@ -475,12 +475,15 @@ void io_snapshot(mpi_config mpi_conf, config conf, double *ltime, double *ttime,
   // Delete file before write
   if (rank == root)
   {
-    // Delete by MPI - doesn't work
-    // MPI_File_delete(gname, infodel);
+    // Delete by MPI
+    MPI_File_delete(gname.c_str(), infodel);
     // Original code
-    string del_cmd =
-	"rm -rf " + bw_filename + " " + time_filename + " " + count_filename;
-    std::system(del_cmd.c_str());
+    // Note: Sometimes MPI_File_delete may not work then use the following way
+    // instead
+    
+    // string del_cmd =
+    // 	"rm -rf " + bw_filename + " " + time_filename + " " + count_filename;
+    // std::system(del_cmd.c_str());
     cout << "Saving snapshot" << endl;
   }
   MPI_Barrier(comm);
