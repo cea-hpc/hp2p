@@ -1,0 +1,45 @@
+# Copyright (C) 2010-2018 CEA/DAM
+# Copyright (C) 2010-2018 Laurent Nguyen <laurent.nguyen@cea.fr>
+#
+# This file is part of HP2P.
+#
+# This software is governed by the CeCILL-C license under French law and
+# abiding by the rules of distribution of free software.  You can  use,
+# modify and/ or redistribute the software under the terms of the CeCILL-C
+# license as circulated by CEA, CNRS and INRIA at the following URL
+# "http://www.cecill.info".
+
+# \file      .travis.yml
+# \author    Laurent Nguyen <laurent.nguyen@cea.fr>
+# \version   3.2
+# \date      01 February 2018
+# \brief     Travis file for CI (see travis-ci.org)
+#
+# \details   No
+
+language: cpp
+
+matrix:
+  include:
+  - addons:
+      apt:
+        packages:
+          - openmpi-common
+          - openmpi-bin
+          - libopenmpi-dev
+          - bash
+          - python
+          - gfortran
+    env:
+      - MATRIX_EVAL="test"
+
+install: true
+
+before_install:
+  - test -n $CC && unset CC
+  - test -n $CXX && unset CXX
+  - mpicc --version
+  - mpic++ --version
+        
+script: ./autogen.sh && ./configure CXX=mpic++ && make && make install
+
