@@ -31,7 +31,20 @@ matrix:
           - python
           - gfortran
     env:
-      - MATRIX_EVAL="test"
+      - OMPI_CC=gcc
+      - OMPI_CXX=g++
+  - addons:
+      apt:
+        packages:
+          - openmpi-common
+          - openmpi-bin
+          - libopenmpi-dev
+          - bash
+          - python
+	  - clang
+    env:
+      - OMPI_CC=clang
+      - OMPI_CXX=clang++
 
 install: true
 
@@ -41,5 +54,5 @@ before_install:
   - mpicc --version
   - mpic++ --version
         
-script: ./autogen.sh && ./configure CXX=mpic++ && make && make install
+script: ./autogen.sh && ./configure --prefix=$HOME/hp2p CXX=mpic++ && make && make install
 
