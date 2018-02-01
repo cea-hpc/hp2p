@@ -483,7 +483,7 @@ void io_snapshot(mpi_config mpi_conf, config conf, double *ltime, double *ttime,
   if (rank == root)
   {
     // Delete by MPI
-    MPI_File_delete(gname.c_str(), infodel);
+    MPI_File_delete(const_cast<char*>(gname.c_str()), infodel);
     // Original code
     // Note: Sometimes MPI_File_delete may not work then use the following way
     // instead
@@ -508,11 +508,11 @@ void io_snapshot(mpi_config mpi_conf, config conf, double *ltime, double *ttime,
   }
   // set file view
   MPI_File_set_view(bwfile, rank * nproc * sizeof(double), MPI_DOUBLE,
-		    MPI_DOUBLE, "native", MPI_INFO_NULL);
+		    MPI_DOUBLE, const_cast<char*>("native"), MPI_INFO_NULL);
   MPI_File_set_view(timefile, rank * nproc * sizeof(double), MPI_DOUBLE,
-		    MPI_DOUBLE, "native", MPI_INFO_NULL);
+		    MPI_DOUBLE, const_cast<char*>("native"), MPI_INFO_NULL);
   MPI_File_set_view(countfile, rank * nproc * sizeof(int), MPI_INT, MPI_INT,
-		    "native", MPI_INFO_NULL);
+		    const_cast<char*>("native"), MPI_INFO_NULL);
   // write buffer to file
   MPI_File_write_all(bwfile, ltime, nproc, MPI_DOUBLE, &status);
   MPI_File_write_all(timefile, ttime, nproc, MPI_DOUBLE, &status);
