@@ -395,8 +395,15 @@ double heavy_p2p_iteration(mpi_config mpi_conf, config conf, int other)
     int *buf2 = NULL;
 
     // Align MPI buffers
-    posix_memalign((void **)&buf1, ALIGNSIZE, msg_size);
-    posix_memalign((void **)&buf2, ALIGNSIZE, msg_size);
+
+    if(posix_memalign((void **)&buf1, ALIGNSIZE, msg_size))
+    {
+      cerr << "Cannot allocate memory...Exit" << endl;
+    }
+    if(posix_memalign((void **)&buf2, ALIGNSIZE, msg_size))
+    {
+      cerr << "Cannot allocate memory...Exit" << endl;
+    }
 
     for (int i = 0; i < N; i++)
       buf1[i] = i;
