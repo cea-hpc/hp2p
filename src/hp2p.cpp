@@ -118,21 +118,21 @@ void default_config(config *conf)
  **/
 void display_config(config conf)
 {
-  cout << "=== Benchmark configuration ===" << endl;
-  cout << endl;
-  cout << "Configuration file         : " << conf.inname << endl;
-  cout << "Number of iterations       : " << conf.nb_shuffle << endl;
-  cout << "Iterations between snapshot: " << conf.snap_freq << endl;
-  cout << "Message size               : " << conf.msg_size << endl;
-  cout << "Number of msg per comm     : " << conf.nb_msg << endl;
-  cout << "Bin timer                  : " << conf.bin_timer << endl;
-  cout << "Max time                   : " << conf.max_time << endl;
-  cout << "Hostfile                   : " << conf.hostfilename << endl;
-  cout << "Build couple algorithm     : " << build_name[conf.build] << endl;
-  cout << "Output file                : " << conf.outname << endl;
-  cout << endl;
-  cout << "===============================" << endl;
-  cout << endl;
+  std::cout << "=== Benchmark configuration ===" << std::endl;
+  std::cout << std::endl;
+  std::cout << "Configuration file         : " << conf.inname << std::endl;
+  std::cout << "Number of iterations       : " << conf.nb_shuffle << std::endl;
+  std::cout << "Iterations between snapshot: " << conf.snap_freq << std::endl;
+  std::cout << "Message size               : " << conf.msg_size << std::endl;
+  std::cout << "Number of msg per comm     : " << conf.nb_msg << std::endl;
+  std::cout << "Bin timer                  : " << conf.bin_timer << std::endl;
+  std::cout << "Max time                   : " << conf.max_time << std::endl;
+  std::cout << "Hostfile                   : " << conf.hostfilename << std::endl;
+  std::cout << "Build couple algorithm     : " << build_name[conf.build] << std::endl;
+  std::cout << "Output file                : " << conf.outname << std::endl;
+  std::cout << std::endl;
+  std::cout << "===============================" << std::endl;
+  std::cout << std::endl;
 }
 /**
  * \fn     void display_help()
@@ -142,23 +142,23 @@ void display_config(config conf)
  **/
 void display_help(char command[])
 {
-  cerr << "Usage: " << command << " [-h] [-n nit] [-k freq] [-m nb_msg]"
-       << endl;
-  cerr << "       [-s msg_size] [-o output] [-r hostfile]" << endl;
-  cerr << "       [-b bin_timer] [-i conf_file]" << endl;
-  cerr << "Options:" << endl;
-  cerr << "   -i conf_file    Configuration file" << endl;
-  cerr << "   -n nit          Number of iterations" << endl;
-  cerr << "   -k freq         Iterations between snapshot" << endl;
-  cerr << "   -s msg_size     Message size" << endl;
-  cerr << "   -m nb_msg       Number of msg per comm" << endl;
-  cerr << "   -b bin_timer    Generate Bin timer (false = 0 (default), true = 1)" << endl;
-  cerr << "   -t max_time     Max duration" << endl;
-  cerr << "   -c build        Algorithm to build couple ";
-  cerr << "(random = 0 (default), mirroring shift = 1)" << endl;
-  cerr << "   -r hostfile     Hostfile" << endl;
-  cerr << "   -o output       Output file" << endl;
-  cerr << endl;
+  std::cerr << "Usage: " << command << " [-h] [-n nit] [-k freq] [-m nb_msg]"
+       << std::endl;
+  std::cerr << "       [-s msg_size] [-o output] [-r hostfile]" << std::endl;
+  std::cerr << "       [-b bin_timer] [-i conf_file]" << std::endl;
+  std::cerr << "Options:" << std::endl;
+  std::cerr << "   -i conf_file    Configuration file" << std::endl;
+  std::cerr << "   -n nit          Number of iterations" << std::endl;
+  std::cerr << "   -k freq         Iterations between snapshot" << std::endl;
+  std::cerr << "   -s msg_size     Message size" << std::endl;
+  std::cerr << "   -m nb_msg       Number of msg per comm" << std::endl;
+  std::cerr << "   -b bin_timer    Generate Bin timer (false = 0 (default), true = 1)" << std::endl;
+  std::cerr << "   -t max_time     Max duration" << std::endl;
+  std::cerr << "   -c build        Algorithm to build couple ";
+  std::cerr << "(random = 0 (default), mirroring shift = 1)" << std::endl;
+  std::cerr << "   -r hostfile     Hostfile" << std::endl;
+  std::cerr << "   -o output       Output file" << std::endl;
+  std::cerr << std::endl;
 }
 /**
  * \fn     void read_configfile(char *fname, config *conf)
@@ -172,7 +172,7 @@ void read_configfile(config *conf)
   std::ifstream fd(conf->inname);
   if (!fd.is_open())
   {
-    cerr << "Error: File doesn't exist" << endl;
+    std::cerr << "Error: File doesn't exist" << std::endl;
     exit(EXIT_FAILURE);
   }
   std::string line;
@@ -398,11 +398,11 @@ double heavy_p2p_iteration(mpi_config mpi_conf, config conf, int other)
 
     if(posix_memalign((void **)&buf1, ALIGNSIZE, msg_size))
     {
-      cerr << "Cannot allocate memory...Exit" << endl;
+      std::cerr << "Cannot allocate memory...Exit" << std::endl;
     }
     if(posix_memalign((void **)&buf2, ALIGNSIZE, msg_size))
     {
-      cerr << "Cannot allocate memory...Exit" << endl;
+      std::cerr << "Cannot allocate memory...Exit" << std::endl;
     }
 
     for (int i = 0; i < N; i++)
@@ -491,7 +491,7 @@ void io_snapshot(mpi_config mpi_conf, config conf, double *ltime, double *ttime,
     // string del_cmd =
     // 	"rm -rf " + bw_filename + " " + time_filename + " " + count_filename;
     // std::system(del_cmd.c_str());
-    cout << "Saving snapshot" << endl;
+    std::cout << "Saving snapshot" << std::endl;
   }
   MPI_Barrier(comm);
   MPI_File_open(comm, (char *)bw_filename.c_str(),
@@ -504,7 +504,7 @@ void io_snapshot(mpi_config mpi_conf, config conf, double *ltime, double *ttime,
   {
     MPI_File_get_info(bwfile, &infoout);
     // MPI_Info_get( infoout, "cb_nodes", 1024, value, &flag );
-    cout << "MPI-IO Hint cb_nodes = " << value << endl;
+    std::cout << "MPI-IO Hint cb_nodes = " << value << std::endl;
   }
   // set file view
   MPI_File_set_view(bwfile, rank * nproc * sizeof(double), MPI_DOUBLE,
@@ -615,7 +615,7 @@ void heavy_p2p_main(config conf, mpi_config mpi_conf)
     // Follow the run
     if (nloops >= 100 && rank == root && ((i % (nloops / 100)) == 0))
     {
-      cout << 100 * ((double)i) / ((double)nloops) << "% done" << endl;
+      std::cout << 100 * ((double)i) / ((double)nloops) << "% done" << std::endl;
     }
     // output time of each iteration
     if (rank == root)
@@ -697,15 +697,15 @@ void heavy_p2p_main(config conf, mpi_config mpi_conf)
 
   if (rank == root)
   {
-    cout << " == SUMMARY ==" << endl << endl;
-    cout << " Min bandwidth : " << bw_min / 1048576 << " MB/s" << endl;
-    cout << " Avg bandwidth : " << bw / 1048576 << " MB/s" << endl;
-    cout << " Max bandwidth : " << bw_max / 1048576 << " MB/s" << endl;
-    cout << endl;
-    cout << " Min latency   : " << lat_min * 1000000 << " us" << endl;
-    cout << " Avg latency   : " << lat * 1000000 << " us" << endl;
-    cout << " Max latency   : " << lat_max * 1000000 << " us" << endl;
-    cout << endl;
+    std::cout << " == SUMMARY ==" << std::endl << std::endl;
+    std::cout << " Min bandwidth : " << bw_min / 1048576 << " MB/s" << std::endl;
+    std::cout << " Avg bandwidth : " << bw / 1048576 << " MB/s" << std::endl;
+    std::cout << " Max bandwidth : " << bw_max / 1048576 << " MB/s" << std::endl;
+    std::cout << std::endl;
+    std::cout << " Min latency   : " << lat_min * 1000000 << " us" << std::endl;
+    std::cout << " Avg latency   : " << lat * 1000000 << " us" << std::endl;
+    std::cout << " Max latency   : " << lat_max * 1000000 << " us" << std::endl;
+    std::cout << std::endl;
   }
 
   // Release memory and files
@@ -769,17 +769,17 @@ int main(int argc, char *argv[])
     ofstream fd(conf.hostfilename);
     if (!fd)
     {
-      cerr << "Error: cannot open hostfile %s" << endl;
+      std::cerr << "Error: cannot open hostfile %s" << std::endl;
       exit(EXIT_FAILURE);
     }
     for (int i = 0; i < mpi_conf.nproc; i++)
     {
       // Print on stdout
-      cout << "Rank " << i << " is running on ";
-      cout << &gname[i * MPI_MAX_PROCESSOR_NAME] << endl;
+      std::cout << "Rank " << i << " is running on ";
+      std::cout << &gname[i * MPI_MAX_PROCESSOR_NAME] << std::endl;
       // Print in file (OpenMPI hostfile style)
       fd << "rank " << i << "=";
-      fd << &gname[i * MPI_MAX_PROCESSOR_NAME] << endl;
+      fd << &gname[i * MPI_MAX_PROCESSOR_NAME] << std::endl;
     }
     fd.close();
     delete[] gname;
