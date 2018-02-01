@@ -21,38 +21,62 @@ language: cpp
 
 matrix:
   include:
-  - addons:
-      apt:
-        packages:
-          - openmpi-common
-          - openmpi-bin
-          - libopenmpi-dev
-          - bash
-          - python
-          - gfortran
-    env:
-      - OMPI_CC=gcc
-      - OMPI_CXX=g++
-  - addons:
-      apt:
-        packages:
-          - openmpi-common
-          - openmpi-bin
-          - libopenmpi-dev
-          - bash
-          - python
-	  - clang
-    env:
-      - OMPI_CC=clang
-      - OMPI_CXX=clang++
-
+     - env: TESTNAME="OMPI"
+       addons:
+         apt:
+           packages:
+             - openmpi-common
+             - openmpi-bin
+             - libopenmpi-dev
+             - python
+       compiler: gcc
+       before_script:
+         - export OMPI_CC=$CC
+         - export OMPI_CXX=$CXX
+         - mpicc --version
+         - mpic++ --version
+     - env: TESTNAME="OMPI"
+       addons:
+         apt:
+           packages:
+             - openmpi-common
+             - openmpi-bin
+             - libopenmpi-dev
+             - python
+       compiler: clang
+       before_script:
+         - export OMPI_CC=$CC
+         - export OMPI_CXX=$CXX
+         - mpicc --version
+         - mpic++ --version
+     - env: TESTNAME="MPICH"
+       addons:
+         apt:
+           packages:
+             - mpich2
+             - libmpich-dev
+             - python
+       compiler: gcc
+       before_script:
+         - export MPICH_CC=$CC
+         - export MPICH_CXX=$CXX
+         - mpicc --version
+         - mpic++ --version
+     - env: TESTNAME="MPICH"
+       addons:
+         apt:
+           packages:
+             - mpich2
+             - libmpich-dev
+             - python
+       compiler: clang
+       before_script:
+         - export MPICH_CC=$CC
+         - export MPICH_CXX=$CXX
+         - mpicc --version
+         - mpic++ --version
+ 
 install: true
 
-before_install:
-  - test -n $CC && unset CC
-  - test -n $CXX && unset CXX
-  - mpicc --version
-  - mpic++ --version
-        
 script: ./autogen.sh && ./configure --prefix=$HOME/hp2p CXX=mpic++ && make && make install
 
