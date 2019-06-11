@@ -1,16 +1,21 @@
 #!/bin/env python
+
+'''
+    Generate JS code throught Plotly to generate Heatmap and Bar charts for HP2P vizualisation
+'''
+
+
 import os
 import sys
-import time
 import datetime
+import argparse
 import numpy as np
 import plotly.offline as py
 import plotly.graph_objs as go
-from plotly import tools
-from optparse import OptionParser
 
 def header_html(clustername="unamed cluster"):
-    header='''
+    '''Return HTLM header'''
+    header = '''
 <!DOCTYPE html>
 <html>
   <head>
@@ -18,132 +23,292 @@ def header_html(clustername="unamed cluster"):
     <title>CEA-HPC - HP2P on {0} - {1}</title>
   </head>
   <style>
-    path {{
-    fill: black;
-    stroke: red;
-    stroke-linejoin: round;
+
+    body {{
+        margin:0;
     }}
-  </style>
+
+    .banner {{
+      overflow: hidden;
+      background-color: #114073;
+      margin: 0;
+      height: 75px;
+      margin-left: 0px;
+      margin-right: 0px;
+      width: 100%;
+    }}
+    .banner > h2 {{
+      float: left;
+      color: white;
+      padding: 2px;
+      font-size: 25px;
+      margin-left: 8%;
+      font-family: 'Open Sans', sans-serif;
+    }}
+
+    .stats-container {{
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: center;
+    }}
+     .stats-container > div {{
+      margin: 4px;
+      padding: 2px;
+      background-color: white;
+      width: 800px;
+      text-align: center;
+      line-height: 20px;
+      font-size: 15px;
+    }}
+    .flex-container {{
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: center;
+    }}
+    .flex-container > div {{
+      margin: 2px;
+      padding: 2px;
+    }}
+</style>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <body>
-'''.format(clustername,datetime.datetime.now().strftime("%d/%m/%Y at %H:%M:%S"))
+  <body style="background-color:rgb(220, 220, 220);">
+'''.format(clustername, datetime.datetime.now().strftime("%d/%m/%Y at %H:%M:%S"))
     return header
 
 def footer_html():
-    footer='''
+    '''Return footer for HTML'''
+    footer = '''
 </body>
 </html>
 '''
     return footer
 
 if __name__ == "__main__":
-    commandname=sys.argv[0]
-    if not sys.argv[1:]:
-        script_argv=['-h']
-    else:
-        script_argv=sys.argv[1:]
 
-    usage="%prog [options] OUTPUTNAME"
-    version="%prog 1.0"
-    description="Visualisation for HP2P Benchmark"
-    contact="****@cea.fr"
-    epilog="Please contact "+contact+" for help"
-    parser = OptionParser(usage=usage,
-                          version=version,
-                          description=description,
-                          epilog=epilog)
-    parser.add_option("-H","--hostfile",
-                      action="store",
-                      dest="hostfile",
-                      default=None,
-                      help="hostfile for corresponding \
-MPI rank in OpenMPI style [Default=%default]")
-    parser.add_option("-c", "--clustername",
-                      action="store",
-                      dest="clustername",
-                      default="unknown cluster",
-                      help="Name of the cluster")
-    parser.add_option("-o", "--output",
-                      action="store",
-                      dest="outfile",
-                      default=None,
-                      help="Name of html file")
-    (options, args) = parser.parse_args(script_argv)
-    hostfile = options.__dict__["hostfile"]
-    if (len(args) == 0):
-        print("No DATAFILE given!")
+# Managing parsing arguments
+
+    commandname = sys.argv[0]
+    if not sys.argv[1:]:
+        script_argv = ['-h']
+    else:
+        script_argv = sys.argv[1:]
+
+    parser = argparse.ArgumentParser(description="Hp2p vizualitation script generating bar charts \
+                                     and heatmaps from hp2p output files \
+                                     (*.bin,*.bin_timer,*.time.bin,*.count.bin)")
+    parser.add_argument('--version', action='version', version="%(prog)s 1.0")
+    parser.add_argument('-H', '--hostfile', action='store', dest='hostfile',
+                        help="hostfile for corresponding MPI rank in OpenMPI style")
+    parser.add_argument('-c', '--clustername', action='store', dest='clustername',
+                        help="Name of the cluster")
+    parser.add_argument('-o', '--output', action='store', dest='outfile',
+                        help="Name of the html File")
+    parser.add_argument('OutputName',
+                        help="Hp2p output file name without extension")
+    args = parser.parse_args(script_argv)
+
+# Script Settings/Configuration
+
+    hostfile = args.hostfile
+    clustername = args.clustername
+    if len(args.OutputName) == 0:
+        print "No DATAFILE given! Please provide Hp2p output files name !"
         exit(0)
     else:
-        outputname = args[0]
-        resfile = args[0]
-    clustername = options.__dict__["clustername"]
-    outfile = options.__dict__["outfile"]
-    if(outfile == None):
-        outfile = resfile+".html"
-    print("%s configuration:"%commandname)
-    print("   DATAFILE            : %s"%resfile)
-    print("   HOSTFILE            : %s"%hostfile)
-    print("   CLUSTER             : %s"%clustername)
-    print("   OUTPUTFILE          : %s"%outfile)
-    if(not os.path.exists(resfile)):
-        print("%s doesn't exist...Exiting"%resfile)
+        outputname = args.OutputName.split('.')[0]
+        resfile = outputname + ".bin"
+        resfile_time = outputname + ".bin_timer"
+        timefile = outputname + ".time.bin"
+        countfile = outputname + ".count.bin"
+    if len(args.outfile) == 0:
+        outfile = outputname + ".html"
+    else:
+        if len(args.outfile.split('.')) == 1:
+            outfile = args.outfile + ".html"
+        else:
+            outfile = args.outfile
+
+    print "%s configuration:"%commandname
+    print "   DATAFILE            : %s"%resfile
+    print "   HOSTFILE            : %s"%hostfile
+    print "   CLUSTER             : %s"%clustername
+    print "   OUTPUTFILE          : %s"%outfile
+    if not os.path.exists(resfile):
+        print "%s doesn't exist...Exiting"%resfile
         exit(0)
-    
-        
+
+# Data management
+
     # Load data
     a = np.fromfile(resfile, dtype="float64")
     a = a.reshape((int(np.sqrt(a.size)), -1))
 
+    b = np.fromfile(timefile, dtype="float64")
+    b = b.reshape((int(np.sqrt(b.size)), -1))
+
+    c_tab = np.fromfile(countfile, dtype="int32")
+    c_tab = c_tab.reshape((int(np.sqrt(c_tab.size)), -1))
+
+    # all but the diagonal
+    a_mask = ~(np.eye(a.shape[0]).astype(bool))
+    b_mask = ~(np.eye(b.shape[0]).astype(bool))
+
+    # mean and standard deviation without diagonal
+    a_mean = a[a_mask].reshape((a.shape[0] - 1, a.shape[1])).mean(0)
+    a_std = a[a_mask].reshape((a.shape[0] - 1, a.shape[1])).std(0)
+    b_mean = b[b_mask].reshape((b.shape[0] - 1, b.shape[1])).mean(0)
+    b_std = b[b_mask].reshape((b.shape[0] - 1, b.shape[1])).std(0)
+
+    a_nz = a[a > 0]
+    b_nz = b[b > 0]
+
+    # number of bars in histograms
+    a_bins = max(5, a.shape[0] / 10)
+    b_bins = max(5, a.shape[0] / 10)
+
+    # compute histogram data
+    ay, ax = np.histogram(a_mean, a_bins) #Distribution of mean bandwidth per rank
+    by, bx = np.histogram(b_mean, b_bins) #Distribution of mean latency per rank
+    azy, azx = np.histogram(a_nz, a_bins) #Distribution of all bandwidth
+    bzy, bzx = np.histogram(b_nz, b_bins) #Distribution of all latency
+
     # Label nodes
     nodes = []
-    if(hostfile == None):
-        for i in range(0,a.size):
+    if hostfile == None:
+        for i in range(0, a.size):
             nodes += ["rank_%d"%i]
     else:
-        motif_rank='rank'
-        separator='='
+        motif_rank = 'rank'
+        separator = '='
         with open(hostfile) as fd:
             for line in fd:
                 if line.startswith(motif_rank):
-                    c,v = line[len(motif_rank)+1:-1].split(separator)
+                    c, v = line[len(motif_rank)+1:-1].split(separator)
                     nodes += [v]
 
-    # statistics
-    a_nz = a[a > 0]
-    stat_st = "<h1>Statistics</h1>"
+# Plotly generation
 
+    # Heatmaps constructions (Bandwiths/Latency)
+    # Heatmaps Bandwidth
+    stat_st = "<div>\n"
+    stat_st += "<h2>Bandwidth Statistics :</h2>\n"
     idx_max = np.unravel_index(a.argmax(), a.shape)
-    np.fill_diagonal(a,a.max())
+    np.fill_diagonal(a, a.max())
     idx_min = np.unravel_index(a.argmin(), a.shape)
-    np.fill_diagonal(a,0)
+    np.fill_diagonal(a, 0)
+    stat_st += "Minimum Bandwidth : %.3f MB/s between %s and %s" % (a_nz.min()/(1024*1024),
+                                                       nodes[idx_min[0]],
+                                                       nodes[idx_min[1]]) + "<br>\n"
+    stat_st += "Maximum Bandwidth : %.3f MB/s between %s and %s" % (a_nz.max()/(1024*1024),
+                                                       nodes[idx_max[0]],
+                                                       nodes[idx_max[1]]) + "<br>\n"
+    stat_st += "Avgerage : %.3f MB/s" %  (a_nz.mean()/(1024*1024)) + "<br>\n"
+    stat_st += "Standard deviation : %.3f MB/s" % (a_nz.std()/(1024*1024)) + "<br>\n"
+    stat_st += "</div>\n"
 
-    stat_st += "Min. : %.3f MB/s between %s and %s" % (a_nz.min()/(1024*1024),nodes[idx_min[0]],nodes[idx_min[1]]) + "<br>"
-    stat_st += "Max. : %.3f MB/s between %s and %s" % (a_nz.max()/(1024*1024),nodes[idx_max[0]],nodes[idx_max[1]]) + "<br>"
-    stat_st += "Avg. : %.3f MB/s" %  (a_nz.mean()/(1024*1024)) + "<br>"
-    stat_st += "Std. : %.3f MB/s" % (a_nz.std()/(1024*1024)) + "<br>"
+    pltpy_data = go.Heatmap(z=a/(1024.*1024.), x=nodes, y=nodes, colorscale='Jet')
+    layout = go.Layout(title="Bandwidth (MB/s)", yaxis=dict(autorange='reversed'),
+                       autosize=True, height=640, width=640)
+    fig = go.Figure(data=[pltpy_data], layout=layout)
 
-    pltpy_data = go.Heatmap(
-            z=a/(1024.*1024.),
-            x=nodes,
-            y=nodes,
-            colorscale='Jet'
-        )
-    layout = go.Layout(
-        title="Bandwidth (MB/s)",
-        yaxis=dict(
-            autorange='reversed'
-        ),
-        autosize=True,
-        height=800,
-        width=800
-    )
+    #Heatmaps Latency
+    b_stat_st = "<div>\n"
+    b_stat_st += "<h2>Latency Statistics :</h2>\n"
+    b_idx_max = np.unravel_index(b.argmax(), b.shape)
+    np.fill_diagonal(b, b.max())
+    b_idx_min = np.unravel_index(b.argmin(), b.shape)
+    np.fill_diagonal(b, 0)
+    b_stat_st += "Minimum bandwidth : %.2f us between %s and %s" % (b_nz.min()*1000000,
+                                                       nodes[b_idx_min[0]],
+                                                       nodes[b_idx_min[1]]) + "<br>\n"
+    b_stat_st += "Maximum bandwidth : %.2f us between %s and %s" % (b_nz.max()*1000000,
+                                                       nodes[b_idx_max[0]],
+                                                       nodes[b_idx_max[1]]) + "<br>\n"
+    b_stat_st += "Average : %.2f" %  (b_nz.mean()*1000000) + "<br>\n"
+    b_stat_st += "Standard deviation : %.2f" % (b_nz.std()*1000000) + "<br>\n"
+    b_stat_st += "</div>\n"
 
-    fig = go.Figure(data=[pltpy_data],layout=layout)
-    url1 = py.plot(fig,include_plotlyjs=False, output_type='div')
-    with open(outfile,"w") as fd:
+    b_pltpy_data = go.Heatmap(z=b/(1000000.*1000000.), x=nodes, y=nodes, colorscale='Jet')
+    b_layout = go.Layout(title="Latency (us)", yaxis=dict(autorange='reversed'),
+                         autosize=True, height=640, width=640)
+    b_fig = go.Figure(data=[b_pltpy_data], layout=b_layout)
+
+
+
+    # Bar constructions (Bandwiths/Latency)
+
+    # Distribution of mean Bandwidth per rank (MB/s)
+    bar_amean = [go.Bar(x=ax, y=ay)]
+    layout_amean = go.Layout(title='Distribution of mean Bandwidth per rank ',
+                             xaxis=dict(title='Bandwidth (MB/s)'),
+                             autosize=True, height=640, width=480)
+    fig_amean = go.Figure(data=bar_amean, layout=layout_amean)
+
+    #Distribution of mean latency per rank
+    bar_bmean = [go.Bar(x=bx, y=by)]
+    layout_bmean = go.Layout(title='Distribution of mean latency per rank',
+                             xaxis=dict(title='Latency (us)'),
+                             autosize=True, height=640, width=480)
+    fig_bmean = go.Figure(data=bar_bmean, layout=layout_bmean)
+
+    #Distribution of all bandwidth
+    bar_azn = [go.Bar(x=azx, y=azy)]
+    layout_azn = go.Layout(title='Distribution of all bandwidth',
+                           xaxis=dict(title='Bandwidth (MB/s)'),
+                           autosize=True, height=640, width=480)
+    fig_azn = go.Figure(data=bar_azn, layout=layout_azn)
+
+    #Distribution of all latency
+    bar_bzn = [go.Bar(x=bzx, y=bzy)]
+    layout_bzn = go.Layout(title='Distribution of all latency',
+                           xaxis=dict(title='Latency (us)'),
+                           autosize=True, height=640, width=480)
+    fig_bzn = go.Figure(data=bar_bzn, layout=layout_bzn)
+
+
+    # Java Script generation
+    URL1 = py.plot(fig, include_plotlyjs=False, output_type='div')
+    URL2 = py.plot(fig_amean, include_plotlyjs=False, output_type='div')
+    URL3 = py.plot(fig_bmean, include_plotlyjs=False, output_type='div')
+    URL4 = py.plot(fig_azn, include_plotlyjs=False, output_type='div')
+    URL5 = py.plot(fig_bzn, include_plotlyjs=False, output_type='div')
+    URL6 = py.plot(b_fig, include_plotlyjs=False, output_type='div')
+
+#Editing html file
+
+    with open(outfile, "w") as fd:
         fd.write(header_html(clustername=clustername))
+        fd.write("<div class=\"banner\">\n")
+        fd.write("<h2>HP2P results vizualisation</h2>\n")
+        fd.write("</div>\n")
+        fd.write("<div class=stats-container >\n")
         fd.write(stat_st)
-        fd.write("<center>\n")
-        fd.write(url1)
-        fd.write("</center>\n")
+        fd.write(b_stat_st)
+        fd.write("</div>\n")
+        fd.write("<div class=flex-container >")
+        fd.write("\n")
+        fd.write(URL1)
+        fd.write("\n")
+        fd.write(URL2)
+        fd.write("\n")
+        fd.write(URL4)
+        fd.write("\n")
+        fd.write("</div>\n")
+        fd.write("\n")
+        fd.write("<div class=flex-container >")
+        fd.write("\n")
+        fd.write(URL6)
+        fd.write("\n")
+        fd.write(URL3)
+        fd.write("\n")
+        fd.write(URL5)
+        fd.write("\n")
+        fd.write("</div>")
+        fd.write("\n")
         fd.write(footer_html())
