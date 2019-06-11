@@ -197,19 +197,19 @@ if __name__ == "__main__":
     # Heatmaps constructions (Bandwiths/Latency)
     # Heatmaps Bandwidth
     stat_st = "<div>\n"
-    stat_st += "<h2>Bandwith Statistics :</h2>\n"
+    stat_st += "<h2>Bandwidth Statistics :</h2>\n"
     idx_max = np.unravel_index(a.argmax(), a.shape)
     np.fill_diagonal(a, a.max())
     idx_min = np.unravel_index(a.argmin(), a.shape)
     np.fill_diagonal(a, 0)
-    stat_st += "Min. : %.3f MB/s between %s and %s" % (a_nz.min()/(1024*1024),
+    stat_st += "Minimum Bandwidth : %.3f MB/s between %s and %s" % (a_nz.min()/(1024*1024),
                                                        nodes[idx_min[0]],
                                                        nodes[idx_min[1]]) + "<br>\n"
-    stat_st += "Max. : %.3f MB/s between %s and %s" % (a_nz.max()/(1024*1024),
+    stat_st += "Maximum Bandwidth : %.3f MB/s between %s and %s" % (a_nz.max()/(1024*1024),
                                                        nodes[idx_max[0]],
                                                        nodes[idx_max[1]]) + "<br>\n"
-    stat_st += "Avg. : %.3f MB/s" %  (a_nz.mean()/(1024*1024)) + "<br>\n"
-    stat_st += "Std. : %.3f MB/s" % (a_nz.std()/(1024*1024)) + "<br>\n"
+    stat_st += "Avgerage : %.3f MB/s" %  (a_nz.mean()/(1024*1024)) + "<br>\n"
+    stat_st += "Standard deviation : %.3f MB/s" % (a_nz.std()/(1024*1024)) + "<br>\n"
     stat_st += "</div>\n"
 
     pltpy_data = go.Heatmap(z=a/(1024.*1024.), x=nodes, y=nodes, colorscale='Jet')
@@ -224,18 +224,18 @@ if __name__ == "__main__":
     np.fill_diagonal(b, b.max())
     b_idx_min = np.unravel_index(b.argmin(), b.shape)
     np.fill_diagonal(b, 0)
-    b_stat_st += "Min. : %.2f us between %s and %s" % (b_nz.min()*1000000,
+    b_stat_st += "Minimum bandwidth : %.2f us between %s and %s" % (b_nz.min()*1000000,
                                                        nodes[b_idx_min[0]],
                                                        nodes[b_idx_min[1]]) + "<br>\n"
-    b_stat_st += "Max. : %.2f us between %s and %s" % (b_nz.max()*1000000,
+    b_stat_st += "Maximum bandwidth : %.2f us between %s and %s" % (b_nz.max()*1000000,
                                                        nodes[b_idx_max[0]],
                                                        nodes[b_idx_max[1]]) + "<br>\n"
-    b_stat_st += "Mean: %.2f" %  (b_nz.mean()*1000000) + "<br>\n"
-    b_stat_st += "Std. : %.2f" % (b_nz.std()*1000000) + "<br>\n"
+    b_stat_st += "Average : %.2f" %  (b_nz.mean()*1000000) + "<br>\n"
+    b_stat_st += "Standard deviation : %.2f" % (b_nz.std()*1000000) + "<br>\n"
     b_stat_st += "</div>\n"
 
     b_pltpy_data = go.Heatmap(z=b/(1000000.*1000000.), x=nodes, y=nodes, colorscale='Jet')
-    b_layout = go.Layout(title="Latency (micros)", yaxis=dict(autorange='reversed'),
+    b_layout = go.Layout(title="Latency (us)", yaxis=dict(autorange='reversed'),
                          autosize=True, height=640, width=640)
     b_fig = go.Figure(data=[b_pltpy_data], layout=b_layout)
 
@@ -245,29 +245,29 @@ if __name__ == "__main__":
 
     # Distribution of mean Bandwidth per rank (MB/s)
     bar_amean = [go.Bar(x=ax, y=ay)]
-    layout_amean = go.Layout(title='Distribution of mean Bandwidth per rank (MB/s)',
-                             xaxis=dict(title='Bandwidth'),
+    layout_amean = go.Layout(title='Distribution of mean Bandwidth per rank ',
+                             xaxis=dict(title='Bandwidth (MB/s)'),
                              autosize=True, height=640, width=480)
     fig_amean = go.Figure(data=bar_amean, layout=layout_amean)
 
     #Distribution of mean latency per rank
     bar_bmean = [go.Bar(x=bx, y=by)]
     layout_bmean = go.Layout(title='Distribution of mean latency per rank',
-                             xaxis=dict(title='Latency'),
+                             xaxis=dict(title='Latency (us)'),
                              autosize=True, height=640, width=480)
     fig_bmean = go.Figure(data=bar_bmean, layout=layout_bmean)
 
     #Distribution of all bandwidth
     bar_azn = [go.Bar(x=azx, y=azy)]
     layout_azn = go.Layout(title='Distribution of all bandwidth',
-                           xaxis=dict(title='Bandwidth'),
+                           xaxis=dict(title='Bandwidth (MB/s)'),
                            autosize=True, height=640, width=480)
     fig_azn = go.Figure(data=bar_azn, layout=layout_azn)
 
     #Distribution of all latency
     bar_bzn = [go.Bar(x=bzx, y=bzy)]
     layout_bzn = go.Layout(title='Distribution of all latency',
-                           xaxis=dict(title='Latency'),
+                           xaxis=dict(title='Latency (us)'),
                            autosize=True, height=640, width=480)
     fig_bzn = go.Figure(data=bar_bzn, layout=layout_bzn)
 
