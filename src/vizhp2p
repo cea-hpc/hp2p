@@ -1,7 +1,7 @@
-#!/bin/env python
+#!/usr/bin/env python
 #
-# Copyright (C) 2010-2016 CEA/DAM
-# Copyright (C) 2010-2016 Laurent Nguyen <laurent.nguyen@cea.fr>
+# Copyright (C) 2010-2019 CEA/DAM
+# Copyright (C) 2010-2019 Laurent Nguyen <laurent.nguyen@cea.fr>
 #
 # This file is part of HP2P.
 #
