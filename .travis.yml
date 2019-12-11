@@ -49,32 +49,6 @@ matrix:
          - export OMPI_CXX=$CXX
          - mpicc --version
          - mpic++ --version
-     - env: TESTNAME="MPICH"
-       addons:
-         apt:
-           packages:
-             - mpich2
-             - libmpich-dev
-             - python
-       compiler: gcc
-       before_script:
-         - export MPICH_CC=$CC
-         - export MPICH_CXX=$CXX
-         - mpicc --version
-         - mpic++ --version
-     - env: TESTNAME="MPICH"
-       addons:
-         apt:
-           packages:
-             - mpich2
-             - libmpich-dev
-             - python
-       compiler: clang
-       before_script:
-         - export MPICH_CC=$CC
-         - export MPICH_CXX=$CXX
-         - mpicc --version
-         - mpic++ --version
  
 install: true
 
