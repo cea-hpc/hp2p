@@ -208,19 +208,19 @@ if __name__ == "__main__":
     # Heatmaps constructions (Bandwiths/Latency)
     # Heatmaps Bandwidth
     stat_st = "<div>\n"
-    stat_st += "<h2>Bandwidth Statistics :</h2>\n"
+    stat_st += "<h2>Bandwidth Statistics:</h2>\n"
     idx_max = np.unravel_index(a.argmax(), a.shape)
     np.fill_diagonal(a, a.max())
     idx_min = np.unravel_index(a.argmin(), a.shape)
     np.fill_diagonal(a, 0)
-    stat_st += "Minimum Bandwidth : %.3f MB/s between %s and %s" % (a_nz.min()/(1024*1024),
+    stat_st += "Minimum Bandwidth: %.3f MB/s between %s and %s" % (a_nz.min()/(1024*1024),
                                                        nodes[idx_min[0]],
                                                        nodes[idx_min[1]]) + "<br>\n"
-    stat_st += "Maximum Bandwidth : %.3f MB/s between %s and %s" % (a_nz.max()/(1024*1024),
+    stat_st += "Maximum Bandwidth: %.3f MB/s between %s and %s" % (a_nz.max()/(1024*1024),
                                                        nodes[idx_max[0]],
                                                        nodes[idx_max[1]]) + "<br>\n"
-    stat_st += "Avgerage : %.3f MB/s" %  (a_nz.mean()/(1024*1024)) + "<br>\n"
-    stat_st += "Standard deviation : %.3f MB/s" % (a_nz.std()/(1024*1024)) + "<br>\n"
+    stat_st += "Average: %.3f MB/s" %  (a_nz.mean()/(1024*1024)) + "<br>\n"
+    stat_st += "Standard deviation: %.3f MB/s" % (a_nz.std()/(1024*1024)) + "<br>\n"
     stat_st += "</div>\n"
 
     pltpy_data = go.Heatmap(z=a/(1024.*1024.), x=nodes, y=nodes, colorscale='Jet')
@@ -230,19 +230,19 @@ if __name__ == "__main__":
 
     #Heatmaps Latency
     b_stat_st = "<div>\n"
-    b_stat_st += "<h2>Latency Statistics :</h2>\n"
+    b_stat_st += "<h2>Latency Statistics:</h2>\n"
     b_idx_max = np.unravel_index(b.argmax(), b.shape)
     np.fill_diagonal(b, b.max())
     b_idx_min = np.unravel_index(b.argmin(), b.shape)
     np.fill_diagonal(b, 0)
-    b_stat_st += "Minimum bandwidth : %.2f us between %s and %s" % (b_nz.min()*1000000,
+    b_stat_st += "Minimum bandwidth: %.2f us between %s and %s" % (b_nz.min()*1000000,
                                                        nodes[b_idx_min[0]],
                                                        nodes[b_idx_min[1]]) + "<br>\n"
-    b_stat_st += "Maximum bandwidth : %.2f us between %s and %s" % (b_nz.max()*1000000,
+    b_stat_st += "Maximum bandwidth: %.2f us between %s and %s" % (b_nz.max()*1000000,
                                                        nodes[b_idx_max[0]],
                                                        nodes[b_idx_max[1]]) + "<br>\n"
-    b_stat_st += "Average : %.2f" %  (b_nz.mean()*1000000) + "<br>\n"
-    b_stat_st += "Standard deviation : %.2f" % (b_nz.std()*1000000) + "<br>\n"
+    b_stat_st += "Average: %.2f" %  (b_nz.mean()*1000000) + "<br>\n"
+    b_stat_st += "Standard deviation: %.2f" % (b_nz.std()*1000000) + "<br>\n"
     b_stat_st += "</div>\n"
 
     b_pltpy_data = go.Heatmap(z=b/(1000000.*1000000.), x=nodes, y=nodes, colorscale='Jet')
@@ -256,7 +256,7 @@ if __name__ == "__main__":
 
     # Distribution of mean Bandwidth per rank (MB/s)
     bar_amean = [go.Bar(x=ax, y=ay)]
-    layout_amean = go.Layout(title='Distribution of mean Bandwidth per rank ',
+    layout_amean = go.Layout(title='Distribution of mean bandwidth per rank ',
                              xaxis=dict(title='Bandwidth (MB/s)'),
                              autosize=True, height=640, width=480)
     fig_amean = go.Figure(data=bar_amean, layout=layout_amean)
