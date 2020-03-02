@@ -87,7 +87,7 @@ def header_html(clustername="unamed cluster"):
       padding: 2px;
     }}
 </style>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<!--  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> -->
   <body style="background-color:rgb(220, 220, 220);">
 '''.format(clustername, datetime.datetime.now().strftime("%d/%m/%Y at %H:%M:%S"))
     return header
@@ -284,7 +284,7 @@ if __name__ == "__main__":
 
 
     # Java Script generation
-    URL1 = py.plot(fig, include_plotlyjs=False, output_type='div')
+    URL1 = py.plot(fig, include_plotlyjs=True, output_type='div')
     URL2 = py.plot(fig_amean, include_plotlyjs=False, output_type='div')
     URL3 = py.plot(fig_bmean, include_plotlyjs=False, output_type='div')
     URL4 = py.plot(fig_azn, include_plotlyjs=False, output_type='div')
