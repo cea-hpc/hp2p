@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include <unistd.h>
 #include <sys/time.h>
@@ -68,6 +69,38 @@ typedef struct
   char *hostlist;
 } hp2p_mpi_config;
 
+typedef struct
+{
+  double *l_time;
+  double *g_time;
+  double *g_bw;
+  double msg_size;
+  int nb_msg;
+  int count_time;
+
+  double sum_time;
+  double avg_time;
+  double stdd_time;
+  double max_time;
+  int i_max_time;
+  int j_max_time;
+  double min_time;
+  int i_min_time;
+  int j_min_time;
+
+  double sum_bw;
+  double avg_bw;
+  double stdd_bw;
+  double max_bw;
+  int i_max_bw;
+  int j_max_bw;
+  double min_bw;
+  int i_min_bw;
+  int j_min_bw;
+
+  hp2p_mpi_config* mpi_conf;
+} hp2p_result;
+
 // hp2p_algo
 int hp2p_algo_get_num();
 char* hp2p_algo_get_name(int algo);
@@ -89,4 +122,14 @@ double hp2p_util_tremain(hp2p_config conf);
 // hp2p_mpi
 int hp2p_mpi_init(int *argc, char ***argv, hp2p_mpi_config *mpi_conf);
 int hp2p_mpi_finalize(hp2p_mpi_config *mpi_conf);
+
+// hp2p_result
+void hp2p_result_alloc(hp2p_result *result,
+		       hp2p_mpi_config *mpi_conf,
+		       int msg_size, int nb_msg
+		       );
+void hp2p_result_free(hp2p_result *result);
+void hp2p_result_update(hp2p_result *result);
+void hp2p_result_display(hp2p_result *result);
+
 #endif
