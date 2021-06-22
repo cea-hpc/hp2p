@@ -41,3 +41,4 @@ src/*.txt
 src/*.bin
 src/*.bin
 src/*.bin
+*.html
