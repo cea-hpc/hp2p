@@ -91,8 +91,9 @@ void hp2p_algo_build_couples(int *v, int size, int algo)
 void hp2p_algo_mirroring_shift(int *v, int size)
 {
   static int init = 0;
+  int i = 0;
   // Couples will be mirroring shift - ly permuted
-  for (int i = 0; i < size; i++)
+  for (i = 0; i < size; i++)
     {
       v[i] = (size + 1 - i + init) % size;
     }
