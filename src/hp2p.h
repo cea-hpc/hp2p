@@ -28,6 +28,7 @@
 
 #include <unistd.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include "mpi.h"
 
@@ -51,6 +52,7 @@ typedef struct
   int build;	         	  // Algorithm to build couple list
   char *buildname;		  // Name of algorithm to build couple list
   double __start_time;
+  int align_size;
 } hp2p_config;
 
 /**
@@ -71,7 +73,9 @@ typedef struct
 
 typedef struct
 {
+  int *l_count;
   double *l_time;
+  int *g_count;
   double *g_time;
   double *g_bw;
   double msg_size;
@@ -131,5 +135,7 @@ void hp2p_result_alloc(hp2p_result *result,
 void hp2p_result_free(hp2p_result *result);
 void hp2p_result_update(hp2p_result *result);
 void hp2p_result_display(hp2p_result *result);
-
+void hp2p_result_display_time(hp2p_result *result);
+void hp2p_result_display_bw(hp2p_result *result);
+void hp2p_result_write_html(hp2p_result result, hp2p_config conf, hp2p_mpi_config mpi_conf);
 #endif

@@ -37,9 +37,10 @@ void hp2p_util_set_default_config(hp2p_config *conf)
   strcpy(conf->inname, "");
   strcpy(conf->outname, "resu");
   conf->max_time = 86400; // 1 day
-  conf->build = 1;   // Random
+  conf->build = 0;   // Random
   conf->buildname = hp2p_algo_get_name(conf->build);
   conf->__start_time = 0.0;
+  conf->align_size = 8;
 }
 /**
  * \fn     void hp2p_util_free_config(config *conf)
@@ -76,6 +77,7 @@ void hp2p_util_display_config(hp2p_config conf)
   printf("Iterations between snapshot: %d\n", conf.snap_freq);
   printf("Message size               : %d\n", conf.msg_size);
   printf("Number of msg per comm     : %d\n", conf.nb_msg);
+  printf("Alignment for MPI buffer   : %d\n", conf.align_size);
   printf("Max time                   : %d\n", conf.max_time);
   printf("Build couple algorithm     : %s\n", conf.buildname);
   printf("Output file                : %s\n", conf.outname);
@@ -92,7 +94,7 @@ void hp2p_util_display_config(hp2p_config conf)
 void hp2p_util_display_help(char command[])
 {
   printf("Usage: %s [-h] [-n nit] [-k freq] [-m nb_msg]\n", command);
-  printf("       [-s msg_size] [-o output] [-r hostfile]\n");
+  printf("       [-s msg_size] [-o output] [-a align]\n");
   printf("       [-i conf_file]\n");
   printf("Options:\n");
   printf("   -i conf_file    Configuration file\n");
@@ -100,6 +102,7 @@ void hp2p_util_display_help(char command[])
   printf("   -k freq         Iterations between snapshot\n");
   printf("   -s msg_size     Message size\n");
   printf("   -m nb_msg       Number of msg per comm\n");
+  printf("   -a align        Alignment size for MPI buffer (default=8)\n");
   printf("   -t max_time     Max duration\n" );
   printf("   -c build        Algorithm to build couple\n");
   printf("                   (random = 0 (default), mirroring shift = 1)\n" );
@@ -146,7 +149,9 @@ void hp2p_util_read_configfile(hp2p_config *conf)
   	    conf->msg_size = atoi(value);
   	  if (strcmp(key, "nb_msg"))
   	    conf->nb_msg = atoi(value);
-  	  if (strcmp(key, "outname"))
+  	  if (strcmp(key, "align"))
+  	    conf->align_size = atoi(value);
+	  if (strcmp(key, "outname"))
   	    strcpy(conf->outname, value);
   	  if (strcmp(key, "build"))
 	    {
@@ -180,7 +185,7 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
   hp2p_util_set_default_config(conf);
 
   // Parsing command line
-  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:t:")) != -1)
+  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:t:a:")) != -1)
   {
     switch (opt)
     {
@@ -196,6 +201,9 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
       break;
     case 'm':
       conf->nb_msg = atoi(optarg);
+      break;
+    case 'a':
+      conf->align_size = atoi(optarg);
       break;
     case 's':
       conf->msg_size = atoi(optarg);
