@@ -52,6 +52,7 @@ typedef struct
   int build;	         	  // Algorithm to build couple list
   char *buildname;		  // Name of algorithm to build couple list
   int anonymize;                  // Write hostname or not
+  char plotlyjs[MAXCHARFILE];     // Path to a plotly.min.js
   double __start_time;
   int align_size;
 } hp2p_config;

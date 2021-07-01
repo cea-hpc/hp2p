@@ -42,6 +42,7 @@ void hp2p_util_set_default_config(hp2p_config *conf)
   conf->__start_time = 0.0;
   conf->align_size = 8;
   conf->anonymize = 0;
+  strcpy(conf->plotlyjs, "");
 }
 /**
  * \fn     void hp2p_util_free_config(config *conf)
@@ -58,6 +59,7 @@ void hp2p_util_free_config(hp2p_config *conf)
   conf->nb_msg = 0;
   strcpy(conf->inname, "");
   strcpy(conf->outname, "");
+  strcpy(conf->plotlyjs, "");
   conf->max_time = 0;
   conf->build = 0;
   free(conf->buildname);
@@ -83,6 +85,7 @@ void hp2p_util_display_config(hp2p_config conf)
   printf("Build couple algorithm     : %s\n", conf.buildname);
   printf("Output file                : %s\n", conf.outname);
   printf("Anonymize hostname         : %d\n", conf.anonymize);
+  printf("Plotly.js file             : %s\n", conf.plotlyjs);
   printf("\n");
   printf("===============================\n");
   printf("\n");
@@ -97,6 +100,7 @@ void hp2p_util_display_help(char command[])
 {
   printf("Usage: %s [-h] [-n nit] [-k freq] [-m nb_msg]\n", command);
   printf("       [-s msg_size] [-o output] [-a align] [-y]\n");
+  printf("       [-p file]");
   printf("       [-i conf_file]\n");
   printf("Options:\n");
   printf("   -i conf_file    Configuration file\n");
@@ -109,6 +113,9 @@ void hp2p_util_display_help(char command[])
   printf("   -c build        Algorithm to build couple\n");
   printf("                   (random = 0 (default), mirroring shift = 1)\n" );
   printf("   -y anon         1 = hide hostname, 0 = write hostname (default)\n");
+  printf("   -p jsfile       Path to a plotly.min.js file to include into HTML\n");
+  printf("                   Use get_plotlyjs.py script if plotly is installed\n");
+  printf("                   in your Python\n");
   printf("   -o output       Output file\n" );
   printf("\n");
 }
@@ -166,6 +173,8 @@ void hp2p_util_read_configfile(hp2p_config *conf)
   	    conf->max_time = atoi(value);
   	  if (strcmp(key, "anonymize"))
   	    conf->anonymize = atoi(value);
+  	  if (strcmp(key, "plotlyjs"))
+	    strcpy(conf->plotlyjs, value);
 	}
     }
   free(buffer);
@@ -190,7 +199,7 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
   hp2p_util_set_default_config(conf);
 
   // Parsing command line
-  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:t:a:y:")) != -1)
+  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:t:a:y:p:")) != -1)
   {
     switch (opt)
     {
@@ -231,6 +240,9 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
       break;
     case 'i':
       strcpy(conf->inname, optarg);
+      break;
+    case 'p':
+      strcpy(conf->plotlyjs, optarg);
       break;
     default:
       break;

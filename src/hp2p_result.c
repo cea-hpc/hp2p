@@ -189,6 +189,7 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf, hp2p_mpi_confi
 {
 
   FILE *fp = NULL;
+  FILE *fplotly = NULL;
   char *filename = NULL;
   char date[1024];
   char hour[1024];
@@ -197,6 +198,8 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf, hp2p_mpi_confi
   int i = 0;
   int j = 0;
   int nproc = 0;
+  char ch = '\0';
+  int pos = 0;
 
   nproc = mpi_conf.nproc;
   now = time(0);
@@ -270,9 +273,28 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf, hp2p_mpi_confi
       fprintf(fp, "    }\n");
       fprintf(fp, "</style>\n");
       fprintf(fp, "<script type=\"text/javascript\">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>\n");
-      //fprintf(fp, "<script type=\"text/javascript\">\n");
-      fprintf(fp, "<script src=\"https://cdn.plot.ly/plotly-2.1.0.min.js\"></script>\n");
-      //fprintf(fp, "</script>\n");
+      if(strlen(conf.plotlyjs) > 0)
+	{
+	  fplotly = fopen(conf.plotlyjs, "r");
+	  if(fplotly != NULL)
+	    {
+	      fprintf(fp, "<script type=\"text/javascript\">\n");
+	      fseek(fplotly, 0L, SEEK_END); // file pointer at end of file
+	      pos = ftell(fplotly);
+	      fseek(fplotly, 0L, SEEK_SET); // file pointer set at start
+	      while (pos--)
+		{
+		  ch = fgetc(fplotly);  // copying file character by character
+		  fputc(ch, fp);
+		}    
+	      fprintf(fp, "\n</script>\n");
+	      fclose(fplotly);
+	    }
+	  else
+	    fprintf(fp, "<script src=\"https://cdn.plot.ly/plotly-2.1.0.min.js\"></script>\n");
+	}
+      else
+	fprintf(fp, "<script src=\"https://cdn.plot.ly/plotly-2.1.0.min.js\"></script>\n");
       fprintf(fp, "<body style=\"background-color:rgb(220, 220, 220);\">\n");
       fprintf(fp, "<div class=\"banner\">\n");
       fprintf(fp, "<h2>HP2P results vizualisation</h2>\n");
