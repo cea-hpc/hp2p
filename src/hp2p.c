@@ -200,7 +200,11 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
     if (i && ((i % conf.snap_freq) == 0))
     {
       hp2p_result_update(&result);
-      hp2p_result_display(&result);
+      if (rank == root)
+	{
+	  hp2p_result_display(&result);
+	}
+      MPI_Barrier(comm);
     }
     // Follow the run
     if (nloops >= 100 && rank == root && ((i % (nloops / 100)) == 0))
