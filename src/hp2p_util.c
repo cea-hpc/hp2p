@@ -41,6 +41,7 @@ void hp2p_util_set_default_config(hp2p_config *conf)
   conf->buildname = hp2p_algo_get_name(conf->build);
   conf->__start_time = 0.0;
   conf->align_size = 8;
+  conf->anonymize = 0;
 }
 /**
  * \fn     void hp2p_util_free_config(config *conf)
@@ -81,6 +82,7 @@ void hp2p_util_display_config(hp2p_config conf)
   printf("Max time                   : %d\n", conf.max_time);
   printf("Build couple algorithm     : %s\n", conf.buildname);
   printf("Output file                : %s\n", conf.outname);
+  printf("Anonymize hostname         : %d\n", conf.anonymize);
   printf("\n");
   printf("===============================\n");
   printf("\n");
@@ -94,7 +96,7 @@ void hp2p_util_display_config(hp2p_config conf)
 void hp2p_util_display_help(char command[])
 {
   printf("Usage: %s [-h] [-n nit] [-k freq] [-m nb_msg]\n", command);
-  printf("       [-s msg_size] [-o output] [-a align]\n");
+  printf("       [-s msg_size] [-o output] [-a align] [-y]\n");
   printf("       [-i conf_file]\n");
   printf("Options:\n");
   printf("   -i conf_file    Configuration file\n");
@@ -106,6 +108,7 @@ void hp2p_util_display_help(char command[])
   printf("   -t max_time     Max duration\n" );
   printf("   -c build        Algorithm to build couple\n");
   printf("                   (random = 0 (default), mirroring shift = 1)\n" );
+  printf("   -y anon         1 = hide hostname, 0 = write hostname (default)\n");
   printf("   -o output       Output file\n" );
   printf("\n");
 }
@@ -161,6 +164,8 @@ void hp2p_util_read_configfile(hp2p_config *conf)
 	    }
   	  if (strcmp(key, "max_time"))
   	    conf->max_time = atoi(value);
+  	  if (strcmp(key, "anonymize"))
+  	    conf->anonymize = atoi(value);
 	}
     }
   free(buffer);
@@ -185,7 +190,7 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
   hp2p_util_set_default_config(conf);
 
   // Parsing command line
-  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:t:a:")) != -1)
+  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:t:a:y:")) != -1)
   {
     switch (opt)
     {
@@ -220,6 +225,9 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
     break;
     case 't':
       conf->max_time = atoi(optarg);
+      break;
+    case 'y':
+      conf->anonymize = atoi(optarg);
       break;
     case 'i':
       strcpy(conf->inname, optarg);

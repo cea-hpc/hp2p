@@ -240,6 +240,7 @@ int main(int argc, char *argv[])
   hp2p_util_read_commandline(argc, argv, &conf);
   if(mpi_conf.rank == mpi_conf.root)
     hp2p_util_display_config(conf);
+  hp2p_mpi_get_hostname(&mpi_conf, conf.anonymize); 
   hp2p_main(conf, mpi_conf);
   hp2p_util_free_config(&conf);
   hp2p_mpi_finalize(&mpi_conf); 

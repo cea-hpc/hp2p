@@ -51,6 +51,7 @@ typedef struct
   int max_time;	        	  // max duration time in seconds for the run
   int build;	         	  // Algorithm to build couple list
   char *buildname;		  // Name of algorithm to build couple list
+  int anonymize;                  // Write hostname or not
   double __start_time;
   int align_size;
 } hp2p_config;
@@ -125,6 +126,7 @@ double hp2p_util_tremain(hp2p_config conf);
 
 // hp2p_mpi
 int hp2p_mpi_init(int *argc, char ***argv, hp2p_mpi_config *mpi_conf);
+int hp2p_mpi_get_hostname(hp2p_mpi_config *mpi_conf, int anonymize);
 int hp2p_mpi_finalize(hp2p_mpi_config *mpi_conf);
 
 // hp2p_result

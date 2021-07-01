@@ -34,9 +34,25 @@ int hp2p_mpi_init(int *argc, char ***argv, hp2p_mpi_config *mpi_conf)
   mpi_conf->hostlist = malloc(mpi_conf->nproc*MPI_MAX_PROCESSOR_NAME*sizeof(char));
   MPI_Allgather(mpi_conf->localhost, MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
 		mpi_conf->hostlist, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, mpi_conf->comm);
+  return EXIT_SUCCESS;
+};
+
+int hp2p_mpi_get_hostname(hp2p_mpi_config *mpi_conf, int anonymize)
+{
+  char rank_str[MPI_MAX_PROCESSOR_NAME] = "";
+
+  sprintf(rank_str, "rank_%d", mpi_conf->rank);
+  
+  if(anonymize == 1)
+    {
+      MPI_Allgather(rank_str, MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
+		    mpi_conf->hostlist, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, mpi_conf->comm);
+    }
+  return EXIT_SUCCESS;
 };
 
 int hp2p_mpi_finalize(hp2p_mpi_config *mpi_conf)
 {
   free(mpi_conf->hostlist);
+  return EXIT_SUCCESS;
 };
