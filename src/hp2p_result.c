@@ -331,9 +331,13 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf, hp2p_mpi_confi
 	}
       fprintf(fp, "     \n");
       fprintf(fp, "    ];\n");
+      fprintf(fp, "      var bw_avg = [];\n");
+      fprintf(fp, "      for (const bw_line of bandwidth) {\n");
+      fprintf(fp, "	var sum = bw_line.reduce((a, b) => a + b, 0);\n");
+      fprintf(fp, "	bw_avg.push(sum/(bw_line.length-1));}\n");
       fprintf(fp, "</script>\n");
       fprintf(fp, "<div class=flex-container >\n");
-      fprintf(fp, "<div><div id=\"0565c6e2-a43b-4956-84fb-40d2e9ecd5ff\" style=\"height: 640px; width: 80%%;\" class=\"plotly-graph-div\"></div>\n");
+      fprintf(fp, "<div><div id=\"0565c6e2-a43b-4956-84fb-40d2e9ecd5ff\" style=\"height: 800px; width: 80%%;\" class=\"plotly-graph-div\"></div>\n");
       fprintf(fp, "  <script type=\"text/javascript\">\n");
       fprintf(fp, "    window.PLOTLYENV=window.PLOTLYENV || {};\n");
       fprintf(fp, "    window.PLOTLYENV.BASE_URL=\"https://plot.ly\";\n");
@@ -346,8 +350,41 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf, hp2p_mpi_confi
       fprintf(fp, "    \"type\": \"heatmap\"}],\n");
       fprintf(fp, "    {\"height\": 800, \"width\": 800, \"autosize\": true, \"title\": {\"text\": \"Bandwidth (MB/s)\"}, \"yaxis\": {\"autorange\": \"reversed\"}}, {\"plotlyServerURL\": \"https://plot.ly\", \"linkText\": \"Export to plot.ly\", \"showLink\": false}\n");
       fprintf(fp, "    )\n");
+      fprintf(fp, "\n  </script>\n\n");
+      fprintf(fp, "</div>\n");
+
+      fprintf(fp, "<div class=flex-container >\n");
+      fprintf(fp, "<div><div id=\"1234\" style=\"height: 800px; width: 80%%;\" class=\"plotly-graph-div\"></div>\n");
+      fprintf(fp, "  <script type=\"text/javascript\">\n");
+      fprintf(fp, "    window.PLOTLYENV=window.PLOTLYENV || {};\n");
+      fprintf(fp, "    window.PLOTLYENV.BASE_URL=\"https://plot.ly\";\n");
+      fprintf(fp, "    Plotly.newPlot(\"1234\",\n");
+      fprintf(fp, "    [{\"uid\": \"5678\",\n");
+      fprintf(fp, "    \"colorscale\": \"Jet\",\n");
+      fprintf(fp, "    \"x\": [].concat(...bandwidth).filter(function(number){return number > 0.0;}),\n");
+      fprintf(fp, "    \"type\": \"histogram\"}],\n");
+      fprintf(fp, "    {\"height\": 800, \"width\": 800, \"autosize\": true, \"title\": {\"text\": \"Distribution Bandwidth (MB/s)\"} }, {\"plotlyServerURL\": \"https://plot.ly\", \"linkText\": \"Export to plot.ly\", \"showLink\": false}\n");
+      fprintf(fp, "    )\n");
       fprintf(fp, "  </script>\n");
       fprintf(fp, "</div>\n");
+      fprintf(fp, "\n");
+      fprintf(fp, "\n");
+      fprintf(fp, "<div class=flex-container >\n");
+      fprintf(fp, "<div><div id=\"12345\" style=\"height: 800px; width: 80%%;\" class=\"plotly-graph-div\"></div>\n");
+      fprintf(fp, "  <script type=\"text/javascript\">\n");
+      fprintf(fp, "    window.PLOTLYENV=window.PLOTLYENV || {};\n");
+      fprintf(fp, "    window.PLOTLYENV.BASE_URL=\"https://plot.ly\";\n");
+      fprintf(fp, "    Plotly.newPlot(\"12345\",\n");
+      fprintf(fp, "    [{\"uid\": \"56789\",\n");
+      fprintf(fp, "    \"colorscale\": \"Jet\",\n");
+      fprintf(fp, "    \"x\": bw_avg,\n");
+      fprintf(fp, "    \"type\": \"histogram\"}],\n");
+      fprintf(fp, "    {\"height\": 800, \"width\": 800, \"autosize\": true, \"title\": {\"text\": \"Distribution of average bandwidth per node (MB/s)\"} }, {\"plotlyServerURL\": \"https://plot.ly\", \"linkText\": \"Export to plot.ly\", \"showLink\": false}\n");
+      fprintf(fp, "    )\n");
+      fprintf(fp, "  </script>\n");
+      fprintf(fp, "</div>\n");
+      fprintf(fp, "\n");
+
       fprintf(fp, "</div>\n");
       fprintf(fp, "</body>\n");
       fprintf(fp, "</html>\n");
