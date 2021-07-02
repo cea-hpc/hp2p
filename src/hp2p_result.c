@@ -363,7 +363,7 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf, hp2p_mpi_confi
       fprintf(fp, "    \"colorscale\": \"Jet\",\n");
       fprintf(fp, "    \"x\": [].concat(...bandwidth).filter(function(number){return number > 0.0;}),\n");
       fprintf(fp, "    \"type\": \"histogram\"}],\n");
-      fprintf(fp, "    {\"height\": 800, \"width\": 800, \"autosize\": true, \"title\": {\"text\": \"Distribution Bandwidth (MB/s)\"} }, {\"plotlyServerURL\": \"https://plot.ly\", \"linkText\": \"Export to plot.ly\", \"showLink\": false}\n");
+      fprintf(fp, "    {\"height\": 800, \"width\": 800, \"autosize\": true, \"title\": {\"text\": \"Distribution Bandwidth (MB/s)\"}, \"yaxis\": {\"title\": \"Number of pairs\"}, \"xaxis\": {\"title\": \"Bandwidth (MB/s)\"}}, {\"plotlyServerURL\": \"https://plot.ly\", \"linkText\": \"Export to plot.ly\", \"showLink\": false}\n");
       fprintf(fp, "    )\n");
       fprintf(fp, "  </script>\n");
       fprintf(fp, "</div>\n");
@@ -379,7 +379,7 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf, hp2p_mpi_confi
       fprintf(fp, "    \"colorscale\": \"Jet\",\n");
       fprintf(fp, "    \"x\": bw_avg,\n");
       fprintf(fp, "    \"type\": \"histogram\"}],\n");
-      fprintf(fp, "    {\"height\": 800, \"width\": 800, \"autosize\": true, \"title\": {\"text\": \"Distribution of average bandwidth per node (MB/s)\"} }, {\"plotlyServerURL\": \"https://plot.ly\", \"linkText\": \"Export to plot.ly\", \"showLink\": false}\n");
+      fprintf(fp, "    {\"height\": 800, \"width\": 800, \"autosize\": true, \"title\": {\"text\": \"Distribution of average bandwidth per node (MB/s)\"}, \"yaxis\": {\"title\": \"Number of nodes\"}, \"xaxis\": {\"title\": \"Bandwidth (MB/s)\"} }, {\"plotlyServerURL\": \"https://plot.ly\", \"linkText\": \"Export to plot.ly\", \"showLink\": false}\n");
       fprintf(fp, "    )\n");
       fprintf(fp, "  </script>\n");
       fprintf(fp, "</div>\n");
