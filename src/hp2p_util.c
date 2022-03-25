@@ -150,30 +150,30 @@ void hp2p_util_read_configfile(hp2p_config *conf)
       buffer[strcspn(buffer, "\n")] = 0;
       if(buffer[0] != '#')
 	{
-	  sscanf(buffer, "%s=%s", key, value);
-	  if(strcmp(key, "nb_shuffle"))
+	  sscanf(buffer, "%s = %s", key, value);
+	  if(strcmp(key, "nb_shuffle") == 0)
 	    conf->nb_shuffle = atoi(value);
-	  if (strcmp(key, "snap_freq"))
+	  if (strcmp(key, "snap_freq") == 0)
   	    conf->snap_freq = atoi(value);
-  	  if (strcmp(key, "msg_size"))
+  	  if (strcmp(key, "msg_size") == 0)
   	    conf->msg_size = atoi(value);
-  	  if (strcmp(key, "nb_msg"))
+  	  if (strcmp(key, "nb_msg") == 0)
   	    conf->nb_msg = atoi(value);
-  	  if (strcmp(key, "align"))
+  	  if (strcmp(key, "align") == 0)
   	    conf->align_size = atoi(value);
-	  if (strcmp(key, "outname"))
+	  if (strcmp(key, "outname") == 0)
   	    strcpy(conf->outname, value);
-  	  if (strcmp(key, "build"))
+  	  if (strcmp(key, "build") == 0)
 	    {
 	      conf->build = atoi(value);
 	      free(conf->buildname);
 	      conf->buildname = hp2p_algo_get_name(conf->build);
 	    }
-  	  if (strcmp(key, "max_time"))
+  	  if (strcmp(key, "max_time") == 0)
   	    conf->max_time = atoi(value);
-  	  if (strcmp(key, "anonymize"))
+  	  if (strcmp(key, "anonymize") == 0)
   	    conf->anonymize = atoi(value);
-  	  if (strcmp(key, "plotlyjs"))
+  	  if (strcmp(key, "plotlyjs") == 0)
 	    strcpy(conf->plotlyjs, value);
 	}
     }
