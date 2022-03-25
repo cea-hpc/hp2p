@@ -54,5 +54,6 @@ int hp2p_mpi_get_hostname(hp2p_mpi_config *mpi_conf, int anonymize)
 int hp2p_mpi_finalize(hp2p_mpi_config *mpi_conf)
 {
   free(mpi_conf->hostlist);
+  MPI_Finalize();
   return EXIT_SUCCESS;
 };
