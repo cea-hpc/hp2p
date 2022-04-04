@@ -6,6 +6,8 @@
 
 The benchmark comes with a interactive GUI tool written in Python 2 with Matplotlib for post-processing the result.
 
+This branch is only for bug correction.
+
 ![alt tag](examples/gui-plotly.png)
 
 New: HTML report can be generated instead of Python GUI for portability. The following link gives an example of a report.
