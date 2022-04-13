@@ -31,6 +31,10 @@
 #include <time.h>
 
 #include "mpi.h"
+#ifdef _ENABLE_CUDA_
+#include <cuda.h>
+#include <cuda_runtime.h>
+#endif
 
 #define MAXCHARFILE 4096
 
@@ -67,8 +71,10 @@ typedef struct
 {
   int root;
   int rank;
+  int local_rank;
   int nproc;
   MPI_Comm comm;
+  MPI_Comm local_comm;
   char localhost[MPI_MAX_PROCESSOR_NAME];
   char *hostlist;
 } hp2p_mpi_config;

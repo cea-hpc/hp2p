@@ -5,7 +5,6 @@ AC_PREREQ([2.63])
 AC_INIT([HP2P], [4.0], [laurent.nguyen@cea.fr])
 AM_INIT_AUTOMAKE([-Wall])
 AC_CONFIG_SRCDIR([src/])
-AC_CONFIG_HEADERS([config.h])
 
 # use the C++ compiler for the following checks
 AC_LANG([C++])
@@ -45,6 +44,35 @@ AC_CHECK_FUNCS([getopt])
 AC_CHECK_FUNCS([MPI_Init MPI_Finalize])
 #AC_CHECK_FUNCS([MPI_File_open MPI_File_close])
 
+# Checks for CUDA
+AC_ARG_ENABLE([cuda],
+              [AS_HELP_STRING([--enable-cuda],
+                              [Enable CUDA benchmarks (default is no).])
+              ],
+              [],
+              [enable_cuda=no])
+
+AC_ARG_WITH([cuda],
+            [AS_HELP_STRING([--with-cuda=@<:@CUDA installation path@:>@],
+                            [Provide path to CUDA installation])
+            ],
+            [AS_CASE([$with_cuda],
+                     [yes|no], [],
+                     [CPPFLAGS="-I$with_cuda/include $CPPFLAGS"
+                      LDFLAGS="-L$with_cuda/lib64 -Wl,-rpath=$with_cuda/lib64 -L$with_cuda/lib -Wl,-rpath=$with_cuda/lib $LDFLAGS"])
+            ])
+AS_CASE([$enable_cuda],
+	[yes], [build_cuda=yes])
+
+AS_IF([test "x$build_cuda" = xyes], [
+       AC_SEARCH_LIBS([cuPointerGetAttribute], [cuda], [],
+                      [AC_MSG_ERROR([cannot link with -lcuda])])
+       AC_SEARCH_LIBS([cudaFree], [cudart], [],
+                      [AC_MSG_ERROR([cannot link with -lcudart])])
+       AC_CHECK_HEADERS([cuda.h], [],
+                        [AC_MSG_ERROR([cannot include cuda.h])])
+       AC_DEFINE([_ENABLE_CUDA_], [1], [Enable CUDA])
+       ])
 
 AC_CONFIG_FILES([Makefile
 	src/Makefile])
