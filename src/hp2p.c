@@ -45,6 +45,10 @@ double hp2p_iteration(hp2p_mpi_config mpi_conf,
   int i = 0;
   int *buf1 = NULL;
   int *buf2 = NULL;
+#ifdef _ENABLE_CUDA_
+  int *d_buf1 = NULL;
+  int *d_buf2 = NULL;
+#endif
   double t0 = 0.0;
   double t1 = 0.0;
   
@@ -76,16 +80,28 @@ double hp2p_iteration(hp2p_mpi_config mpi_conf,
     {
       fprintf(stderr, "Cannot allocate memory...Exit\n");
     }
-
+    
     for (i = 0; i < n; i++)
       buf1[i] = i;
 
+#ifdef _ENABLE_CUDA_
+    cudaMalloc(&d_buf1, n*sizeof(int));
+    cudaMalloc(&d_buf2, n*sizeof(int));
+    
+    cudaMemcpy(d_buf1, buf1, n*sizeof(int), cudaMemcpyHostToDevice);
+#endif
+    
     MPI_Request req[2];
     MPI_Status status[2];
 
     // First comm
+#ifndef _ENABLE_CUDA_
     MPI_Irecv(buf2, n, MPI_INT, other, 0, comm, &req[0]);
     MPI_Isend(buf1, n, MPI_INT, other, 0, comm, &req[1]);
+#else
+    MPI_Irecv(d_buf2, n, MPI_INT, other, 0, comm, &req[0]);
+    MPI_Isend(d_buf1, n, MPI_INT, other, 0, comm, &req[1]);
+#endif
     MPI_Waitall(2, req, status);
 
     MPI_Barrier(comm);
@@ -94,8 +110,13 @@ double hp2p_iteration(hp2p_mpi_config mpi_conf,
     t0 = hp2p_util_get_time();
     for (i = 0; i < nb_msg; i++)
       {
+#ifndef _ENABLE_CUDA_
 	MPI_Irecv(buf2, n, MPI_INT, other, 0, comm, &req[0]);
 	MPI_Isend(buf1, n, MPI_INT, other, 0, comm, &req[1]);
+#else
+	MPI_Irecv(d_buf2, n, MPI_INT, other, 0, comm, &req[0]);
+	MPI_Isend(d_buf1, n, MPI_INT, other, 0, comm, &req[1]);
+#endif
 	MPI_Waitall(2, req, status);
       }
 
@@ -104,6 +125,12 @@ double hp2p_iteration(hp2p_mpi_config mpi_conf,
     MPI_Barrier(comm);
     free((void *)buf1);
     free((void *)buf2);
+
+#ifdef _ENABLE_CUDA_
+    cudaFree(d_buf1);
+    cudaFree(d_buf2);
+#endif
+    
     time_hp2p = (t1 - t0)/nb_msg;
   }
   return time_hp2p;
