@@ -30,9 +30,7 @@
  * \param    nproc
  * \msg_size size of a message
  **/
-double hp2p_iteration(hp2p_mpi_config mpi_conf,
-		      hp2p_config conf,
-		      int other)
+double hp2p_iteration(hp2p_mpi_config mpi_conf, hp2p_config conf, int other)
 {
   double time_hp2p = 0.0;
   int rank = 0;
@@ -51,7 +49,7 @@ double hp2p_iteration(hp2p_mpi_config mpi_conf,
 #endif
   double t0 = 0.0;
   double t1 = 0.0;
-  
+
   rank = mpi_conf.rank;
   comm = mpi_conf.comm;
   nproc = mpi_conf.nproc;
@@ -70,25 +68,25 @@ double hp2p_iteration(hp2p_mpi_config mpi_conf,
 
     // Align MPI buffers
 
-    if(posix_memalign((void **)&buf1, align_size, msg_size))
+    if (posix_memalign((void **)&buf1, align_size, msg_size))
     {
       fprintf(stderr, "Cannot allocate memory...Exit\n");
     }
-    if(posix_memalign((void **)&buf2, align_size, msg_size))
+    if (posix_memalign((void **)&buf2, align_size, msg_size))
     {
       fprintf(stderr, "Cannot allocate memory...Exit\n");
     }
-    
+
     for (i = 0; i < n; i++)
       buf1[i] = i;
 
 #ifdef _ENABLE_CUDA_
-    cudaMalloc(&d_buf1, n*sizeof(int));
-    cudaMalloc(&d_buf2, n*sizeof(int));
-    
-    cudaMemcpy(d_buf1, buf1, n*sizeof(int), cudaMemcpyHostToDevice);
+    cudaMalloc(&d_buf1, n * sizeof(int));
+    cudaMalloc(&d_buf2, n * sizeof(int));
+
+    cudaMemcpy(d_buf1, buf1, n * sizeof(int), cudaMemcpyHostToDevice);
 #endif
-    
+
     MPI_Request req[2];
     MPI_Status status[2];
 
@@ -107,16 +105,16 @@ double hp2p_iteration(hp2p_mpi_config mpi_conf,
     t1 = 0;
     t0 = hp2p_util_get_time();
     for (i = 0; i < nb_msg; i++)
-      {
+    {
 #ifndef _ENABLE_CUDA_
-	MPI_Irecv(buf2, n, MPI_INT, other, 0, comm, &req[0]);
-	MPI_Isend(buf1, n, MPI_INT, other, 0, comm, &req[1]);
+      MPI_Irecv(buf2, n, MPI_INT, other, 0, comm, &req[0]);
+      MPI_Isend(buf1, n, MPI_INT, other, 0, comm, &req[1]);
 #else
-	MPI_Irecv(d_buf2, n, MPI_INT, other, 0, comm, &req[0]);
-	MPI_Isend(d_buf1, n, MPI_INT, other, 0, comm, &req[1]);
+      MPI_Irecv(d_buf2, n, MPI_INT, other, 0, comm, &req[0]);
+      MPI_Isend(d_buf1, n, MPI_INT, other, 0, comm, &req[1]);
 #endif
-	MPI_Waitall(2, req, status);
-      }
+      MPI_Waitall(2, req, status);
+    }
 
     t1 = hp2p_util_get_time();
 
@@ -128,8 +126,8 @@ double hp2p_iteration(hp2p_mpi_config mpi_conf,
     cudaFree(d_buf1);
     cudaFree(d_buf2);
 #endif
-    
-    time_hp2p = (t1 - t0)/nb_msg;
+
+    time_hp2p = (t1 - t0) / nb_msg;
   }
   return time_hp2p;
 }
@@ -161,7 +159,7 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
   int msg_size = 0;
   // Couples array
   int *couples = NULL;
-  
+
   // Duration control
   double tremain = 1.e6;
   // Timers
@@ -169,8 +167,8 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
   double time_build_couples = 0.0;
   double time_heavyp2p = 0.0;
   double time_control = 0.0;
-  double local_time=0.;
-  double max_time=0.;
+  double local_time = 0.;
+  double max_time = 0.;
 
   hp2p_result result;
 
@@ -187,16 +185,16 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
   msg_size = conf.msg_size;
   hp2p_result_alloc(&result, &mpi_conf, msg_size, conf.nb_msg);
   hp2p_util_init_tremain(&conf);
-  
+
   if (rank == root)
-    {
-      couples = (int *)malloc(nproc*sizeof(int));
-    }
-  
+  {
+    couples = (int *)malloc(nproc * sizeof(int));
+  }
+
   // Main loop
   for (i = 1; i <= nloops && tremain >= 0; i++)
-    {
-    
+  {
+
     other = -1;
     // Check time left before job ends
     tremain = hp2p_util_tremain(conf);
@@ -214,13 +212,19 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
     {
       start = MPI_Wtime();
     }
-    local_time=hp2p_iteration(mpi_conf, conf, other);
+    local_time = hp2p_iteration(mpi_conf, conf, other);
     result.l_time[other] += local_time;
-    if (((conf.time_mult < 1.) &&  (conf.local_max_time > 0.0) && (conf.local_max_time < local_time)) || ((conf.time_mult >= 1.) && (result.avg_time > 0.0) && (conf.time_mult*result.avg_time < local_time)))
-       {
-        if (rank < other)
-            fprintf(stderr,"warning: the communication between %d and %d was slow.\nTime of communication : %lf\nMean Time of communication : %lf\n",rank,other,local_time,result.avg_time);
-       } 
+    if (((conf.time_mult < 1.) && (conf.local_max_time > 0.0) &&
+	 (conf.local_max_time < local_time)) ||
+	((conf.time_mult >= 1.) && (result.avg_time > 0.0) &&
+	 (conf.time_mult * result.avg_time < local_time)))
+    {
+      if (rank < other)
+	fprintf(stderr,
+		"warning: the communication between %d and %d was slow.\nTime "
+		"of communication : %lf\nMean Time of communication : %lf\n",
+		rank, other, local_time, result.avg_time);
+    }
     if (other != rank)
       result.l_count[other]++;
     if (rank == root)
@@ -233,27 +237,27 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
     {
       hp2p_result_update(&result);
       if (rank == root)
-	{
-	  hp2p_result_display(&result);
-	}
+      {
+	hp2p_result_display(&result);
+      }
       MPI_Barrier(comm);
     }
     // Follow the run
     if (nloops >= 100 && rank == root && ((i % (nloops / 100)) == 0))
     {
-      printf("%d %% done\n", (int) (100 * ((double)i) / ((double)nloops)));
+      printf("%d %% done\n", (int)(100 * ((double)i) / ((double)nloops)));
     }
     // output time of each iteration
   }
   // Final snapshot
-  //io_snapshot(mpi_conf, conf, ltime, ttime, times, counts, conf.outname);
+  // io_snapshot(mpi_conf, conf, ltime, ttime, times, counts, conf.outname);
   hp2p_result_update(&result);
   if (rank == root)
-    {
-      hp2p_result_display(&result);
-      printf("Writing final result...\n");
-      hp2p_result_write_html(result, conf, mpi_conf);
-    }
+  {
+    hp2p_result_display(&result);
+    printf("Writing final result...\n");
+    hp2p_result_write_html(result, conf, mpi_conf);
+  }
   MPI_Barrier(comm);
   hp2p_result_free(&result);
   // Release memory and files
@@ -263,23 +267,19 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
   }
 }
 
-
 int main(int argc, char *argv[])
 {
   hp2p_config conf;
   hp2p_mpi_config mpi_conf;
 
-  hp2p_mpi_init(&argc, &argv, &mpi_conf); 
+  hp2p_mpi_init(&argc, &argv, &mpi_conf);
   hp2p_util_set_default_config(&conf);
   hp2p_util_read_commandline(argc, argv, &conf);
-  if(mpi_conf.rank == mpi_conf.root)
+  if (mpi_conf.rank == mpi_conf.root)
     hp2p_util_display_config(conf);
-  hp2p_mpi_get_hostname(&mpi_conf, conf.anonymize); 
+  hp2p_mpi_get_hostname(&mpi_conf, conf.anonymize);
   hp2p_main(conf, mpi_conf);
   hp2p_util_free_config(&conf);
-  hp2p_mpi_finalize(&mpi_conf); 
+  hp2p_mpi_finalize(&mpi_conf);
   return EXIT_SUCCESS;
 };
-
-
-
