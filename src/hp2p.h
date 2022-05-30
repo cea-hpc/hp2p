@@ -59,6 +59,8 @@ typedef struct
   char plotlyjs[MAXCHARFILE];     // Path to a plotly.min.js
   double __start_time;
   int align_size;
+  double local_max_time;
+  double time_mult;
 } hp2p_config;
 
 /**

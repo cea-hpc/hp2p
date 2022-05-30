@@ -58,8 +58,6 @@ double hp2p_iteration(hp2p_mpi_config mpi_conf,
   msg_size = conf.msg_size;
   nb_msg = conf.nb_msg;
   align_size = conf.align_size;
-
-  
   if (rank == other)
   {
     time_hp2p = 0.0;
@@ -171,6 +169,8 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
   double time_build_couples = 0.0;
   double time_heavyp2p = 0.0;
   double time_control = 0.0;
+  double local_time=0.;
+  double max_time=0.;
 
   hp2p_result result;
 
@@ -185,7 +185,6 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
   // Benchmark parameters
   nloops = conf.nb_shuffle;
   msg_size = conf.msg_size;
-
   hp2p_result_alloc(&result, &mpi_conf, msg_size, conf.nb_msg);
   hp2p_util_init_tremain(&conf);
   
@@ -215,7 +214,13 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
     {
       start = MPI_Wtime();
     }
-    result.l_time[other] += hp2p_iteration(mpi_conf, conf, other);
+    local_time=hp2p_iteration(mpi_conf, conf, other);
+    result.l_time[other] += local_time;
+    if (((conf.time_mult < 1.) &&  (conf.local_max_time > 0.0) && (conf.local_max_time < local_time)) || ((conf.time_mult >= 1.) && (result.avg_time > 0.0) && (conf.time_mult*result.avg_time < local_time)))
+       {
+        if (rank < other)
+            fprintf(stderr,"warning: the communication between %d and %d was slow.\nTime of communication : %lf\nMean Time of communication : %lf\n",rank,other,local_time,result.avg_time);
+       } 
     if (other != rank)
       result.l_count[other]++;
     if (rank == root)
