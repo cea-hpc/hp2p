@@ -21,12 +21,7 @@
 
 #include "hp2p.h"
 
-char *hp2p_algo_name[] = {
-  "RANDOM",
-  "SHIFT",
-  NULL
-};
-
+char *hp2p_algo_name[] = {"RANDOM", "SHIFT", NULL};
 
 /**
  * \fn     void hp2p_algo_get_num
@@ -40,11 +35,11 @@ int hp2p_algo_get_num()
   int i = 0;
   char *p = NULL;
   p = hp2p_algo_name[0];
-  while(p != NULL)
-    {
-      i++;
-      p++;
-    }
+  while (p != NULL)
+  {
+    i++;
+    p++;
+  }
   return i;
 }
 /**
@@ -54,14 +49,14 @@ int hp2p_algo_get_num()
  * \param  void
  * \return char *
  **/
-char* hp2p_algo_get_name(int algo)
+char *hp2p_algo_get_name(int algo)
 {
   char *tmp = NULL;
   int len = 0;
 
   len = strlen(hp2p_algo_name[algo]);
 
-  tmp = (char *) malloc(len*sizeof(char)+1);
+  tmp = (char *)malloc(len * sizeof(char) + 1);
   strcpy(tmp, hp2p_algo_name[algo]);
   return tmp;
 }
@@ -81,7 +76,7 @@ void hp2p_algo_build_couples(int *v, int size, int algo)
   if (algo == 0)
   {
     hp2p_algo_random(v, size);
-  }  
+  }
   else
   {
     hp2p_algo_mirroring_shift(v, size);
@@ -94,8 +89,8 @@ void hp2p_algo_mirroring_shift(int *v, int size)
   int i = 0;
   // Couples will be mirroring shift - ly permuted
   for (i = 0; i < size; i++)
-    {
-      v[i] = (size + 1 - i + init) % size;
-    }
+  {
+    v[i] = (size + 1 - i + init) % size;
+  }
   init++;
 }
