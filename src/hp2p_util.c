@@ -43,6 +43,7 @@ void hp2p_util_set_default_config(hp2p_config *conf)
   conf->align_size = 8;
   conf->anonymize = 0;
   strcpy(conf->plotlyjs, "");
+  strcpy(conf->output_mode, "html");
 }
 /**
  * \fn     void hp2p_util_free_config(config *conf)
@@ -86,6 +87,7 @@ void hp2p_util_display_config(hp2p_config conf)
   printf("Output file                : %s\n", conf.outname);
   printf("Anonymize hostname         : %d\n", conf.anonymize);
   printf("Plotly.js file             : %s\n", conf.plotlyjs);
+  printf("output format              : %s\n", conf.output_mode);
   printf("\n");
   printf("===============================\n");
   printf("\n");
@@ -117,6 +119,7 @@ void hp2p_util_display_help(char command[])
   printf("                   Use get_plotlyjs.py script if plotly is installed\n");
   printf("                   in your Python\n");
   printf("   -o output       Output file\n" );
+  printf("   -f format       Output Format\n");
   printf("\n");
 }
 /**
@@ -175,6 +178,8 @@ void hp2p_util_read_configfile(hp2p_config *conf)
   	    conf->anonymize = atoi(value);
   	  if (strcmp(key, "plotlyjs") == 0)
 	    strcpy(conf->plotlyjs, value);
+  	  if (strcmp(key, "output_format") == 0)
+	    strcpy(conf->output_mode, value);
 	}
     }
   free(buffer);
@@ -199,7 +204,7 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
   hp2p_util_set_default_config(conf);
 
   // Parsing command line
-  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:t:a:y:p:")) != -1)
+  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:t:a:y:p:f:")) != -1)
   {
     switch (opt)
     {
@@ -243,6 +248,9 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
       break;
     case 'p':
       strcpy(conf->plotlyjs, optarg);
+      break;
+    case 'f':
+      strcpy(conf->output_mode, optarg);
       break;
     default:
       break;

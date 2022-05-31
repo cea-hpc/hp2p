@@ -184,6 +184,48 @@ void hp2p_result_display_bw(hp2p_result *result)
     }      
     
 }
+void hp2p_result_write_binary(hp2p_result result, hp2p_config conf, hp2p_mpi_config mpi_conf)
+{
+
+  FILE *fp = NULL;
+  char *filename = NULL;
+  char date[1024];
+  char hour[1024];
+  time_t now;
+  struct tm *ltm;
+  int i = 0;
+  int j = 0;
+  int nproc = 0;
+  char ch = '\0';
+  int pos = 0;
+
+  nproc = mpi_conf.nproc;
+  now = time(0);
+  ltm = localtime(&now);
+  sprintf(date, "%d/%d/%d", ltm->tm_mday, 1 + ltm->tm_mon, 1900 + ltm->tm_year);
+  sprintf(hour, "%d:%d:%d", ltm->tm_hour, ltm->tm_min, ltm->tm_sec);
+  filename = (char *) malloc((strlen(conf.outname)+16)*sizeof(char));
+  strcpy(filename, conf.outname);
+  strcat(filename, ".bin");
+  fp = fopen(filename, "wb");
+  /* file format is :
+ *  nb rank 
+ *  hostlist[nbrank]
+ *  result[nbrank*nbrank]
+ */
+  if(fp != NULL)
+    {
+      nproc = mpi_conf.nproc;
+      fwrite(&nproc,sizeof(int),1,fp);
+      fwrite(mpi_conf.hostlist,sizeof(char),nproc*MPI_MAX_PROCESSOR_NAME,fp);
+      fwrite(result.g_bw,sizeof(double),nproc*nproc,fp);
+      fwrite(result.g_time,sizeof(double),nproc*nproc,fp);
+      fwrite(result.g_count,sizeof(int),nproc*nproc,fp);
+      fclose(fp);
+    }
+  free(filename);
+ hp2p_result_display_bw(&result);
+}
 
 void hp2p_result_write_html(hp2p_result result, hp2p_config conf, hp2p_mpi_config mpi_conf)
 {
@@ -394,4 +436,12 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf, hp2p_mpi_confi
       fclose(fp);
     }
   free(filename);
+}
+void hp2p_result_write(hp2p_result result, hp2p_config conf, hp2p_mpi_config mpi_conf)
+{
+if (!strcmp(conf.output_mode,"bin"))
+    hp2p_result_write_binary(result,conf,mpi_conf);
+else
+    hp2p_result_write_html(result,conf,mpi_conf);
+    
 }

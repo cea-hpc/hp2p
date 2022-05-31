@@ -247,7 +247,7 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
     {
       hp2p_result_display(&result);
       printf("Writing final result...\n");
-      hp2p_result_write_html(result, conf, mpi_conf);
+      hp2p_result_write(result, conf, mpi_conf);
     }
   MPI_Barrier(comm);
   hp2p_result_free(&result);
