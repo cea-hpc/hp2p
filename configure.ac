@@ -43,11 +43,18 @@ AC_CHECK_FUNCS([getopt])
 # Checks for MPI library functions.
 AC_CHECK_FUNCS([MPI_Init MPI_Finalize])
 #AC_CHECK_FUNCS([MPI_File_open MPI_File_close])
+#check if signal has been asked
+AC_ARG_ENABLE([signal],
+              [AS_HELP_STRING([--enable-signal],
+                              [enable signal handling in output management (default is no).])
+              ],
+              [],
+              [enable_signal=no])
 
 # Checks for CUDA
 AC_ARG_ENABLE([cuda],
               [AS_HELP_STRING([--enable-cuda],
-                              [Enable CUDA benchmarks (default is no).])
+                              [enable cuda benchmarks (default is no).])
               ],
               [],
               [enable_cuda=no])
@@ -63,6 +70,9 @@ AC_ARG_WITH([cuda],
             ])
 AS_CASE([$enable_cuda],
 	[yes], [build_cuda=yes])
+
+AS_CASE([$enable_signal],
+	[yes], [CPPFLAGS="-D_HP2P_SIGNAL $CPPFLAGS"])
 
 AS_IF([test "x$build_cuda" = xyes], [
        AC_SEARCH_LIBS([cuPointerGetAttribute], [cuda], [],
