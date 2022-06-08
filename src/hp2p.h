@@ -60,6 +60,8 @@ typedef struct
   double __start_time;
   int align_size;
   char output_mode[4];
+  double local_max_time;
+  double time_mult;
 } hp2p_config;
 
 /**
