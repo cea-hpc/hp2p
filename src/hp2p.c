@@ -185,7 +185,9 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
   msg_size = conf.msg_size;
   hp2p_result_alloc(&result, &mpi_conf, msg_size, conf.nb_msg);
   hp2p_util_init_tremain(&conf);
-
+#ifdef _HP2P_SIGNAL
+   init_signal_writer(conf);
+#endif  
   if (rank == root)
   {
     couples = (int *)malloc(nproc * sizeof(int));
@@ -247,6 +249,9 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
     {
       printf("%d %% done\n", (int)(100 * ((double)i) / ((double)nloops)));
     }
+#ifdef _HP2P_SIGNAL
+   check_signal(result, conf, mpi_conf,rank,root);
+#endif
     // output time of each iteration
   }
   // Final snapshot

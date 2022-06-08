@@ -60,6 +60,7 @@ typedef struct
   double __start_time;
   int align_size;
   char output_mode[4];
+  int alarm;
   double local_max_time;
   double time_mult;
 } hp2p_config;
@@ -150,4 +151,7 @@ void hp2p_result_display(hp2p_result *result);
 void hp2p_result_display_time(hp2p_result *result);
 void hp2p_result_display_bw(hp2p_result *result);
 void hp2p_result_write(hp2p_result result, hp2p_config conf, hp2p_mpi_config mpi_conf);
+void init_signal_writer(hp2p_config conf);
+void check_signal(hp2p_result result, hp2p_config conf,
+		  hp2p_mpi_config mpi_conf, int rank, int root);
 #endif
