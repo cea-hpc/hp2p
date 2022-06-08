@@ -108,6 +108,7 @@ void hp2p_util_display_help(char command[])
   printf("       [-s msg_size] [-o output] [-a align] [-y]\n");
   printf("       [-p file]");
   printf("       [-i conf_file]\n");
+  printf("       [-f bin|html] [-M max_comm_time] [-X mult_time]\n");
   printf("Options:\n");
   printf("   -i conf_file       Configuration file\n");
   printf("   -n nit             Number of iterations\n");
@@ -124,14 +125,17 @@ void hp2p_util_display_help(char command[])
 	 "HTML\n");
   printf("                      Use get_plotlyjs.py script if plotly is "
 	 "installed\n");
-  printf("                      in your Python\n");
+  printf("                      in your Python distribution\n");
   printf("   -o output          Output file\n");
-  printf("   -f format       Output Format\n");
-  printf("   -M max_comm_time   Maximum time of a communication step\n");
-  printf("   -X mult_time       multiplier of mean time, to use as maximum "
-	 "communication time\n");
-  printf("The -X and -M option print a warning each time a communication pair "
-	 "is slower than either max_comm_time or mult_time*avg_time\n");
+  printf("   -f format          Output format (binary format = bin, plotly\n");
+  printf("                      format = html) [default: html]\n");
+  printf("   -M max_comm_time   If set, print a warning each time a\n");
+  printf("                      communication pair is slower than \n");
+  printf("                      max_comm_time\n");
+  printf("   -X mult_time       If set, print a warning each time a\n");
+  printf("                      communication pair is slower than \n");
+  printf("                      mult_time * mean of previous\n");
+  printf("                      communication times\n");
   printf("\n");
 }
 /**
