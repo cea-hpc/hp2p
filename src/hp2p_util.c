@@ -37,11 +37,13 @@ void hp2p_util_set_default_config(hp2p_config *conf)
   strcpy(conf->inname, "");
   strcpy(conf->outname, "resu");
   conf->max_time = 86400; // 1 day
-  conf->build = 0;   // Random
+  conf->build = 0;	  // Random
   conf->buildname = hp2p_algo_get_name(conf->build);
   conf->__start_time = 0.0;
   conf->align_size = 8;
   conf->anonymize = 0;
+  conf->time_mult = -1.;
+  conf->local_max_time = -1.;
   strcpy(conf->plotlyjs, "");
   strcpy(conf->output_mode, "html");
 }
@@ -88,6 +90,8 @@ void hp2p_util_display_config(hp2p_config conf)
   printf("Anonymize hostname         : %d\n", conf.anonymize);
   printf("Plotly.js file             : %s\n", conf.plotlyjs);
   printf("output format              : %s\n", conf.output_mode);
+  printf("time_mult                  : %s\n", conf.time_mult);
+  printf("max_communication_time     : %s\n", conf.local_max_time);
   printf("\n");
   printf("===============================\n");
   printf("\n");
@@ -105,21 +109,29 @@ void hp2p_util_display_help(char command[])
   printf("       [-p file]");
   printf("       [-i conf_file]\n");
   printf("Options:\n");
-  printf("   -i conf_file    Configuration file\n");
-  printf("   -n nit          Number of iterations\n");
-  printf("   -k freq         Iterations between snapshot\n");
-  printf("   -s msg_size     Message size\n");
-  printf("   -m nb_msg       Number of msg per comm\n");
-  printf("   -a align        Alignment size for MPI buffer (default=8)\n");
-  printf("   -t max_time     Max duration\n" );
-  printf("   -c build        Algorithm to build couple\n");
-  printf("                   (random = 0 (default), mirroring shift = 1)\n" );
-  printf("   -y anon         1 = hide hostname, 0 = write hostname (default)\n");
-  printf("   -p jsfile       Path to a plotly.min.js file to include into HTML\n");
-  printf("                   Use get_plotlyjs.py script if plotly is installed\n");
-  printf("                   in your Python\n");
-  printf("   -o output       Output file\n" );
+  printf("   -i conf_file       Configuration file\n");
+  printf("   -n nit             Number of iterations\n");
+  printf("   -k freq            Iterations between snapshot\n");
+  printf("   -s msg_size        Message size\n");
+  printf("   -m nb_msg          Number of msg per comm\n");
+  printf("   -a align           Alignment size for MPI buffer (default=8)\n");
+  printf("   -t max_time        Max duration\n");
+  printf("   -c build           Algorithm to build couple\n");
+  printf("                      (random = 0 (default), mirroring shift = 1)\n");
+  printf("   -y anon            1 = hide hostname, 0 = write hostname "
+	 "(default)\n");
+  printf("   -p jsfile          Path to a plotly.min.js file to include into "
+	 "HTML\n");
+  printf("                      Use get_plotlyjs.py script if plotly is "
+	 "installed\n");
+  printf("                      in your Python\n");
+  printf("   -o output          Output file\n");
   printf("   -f format       Output Format\n");
+  printf("   -M max_comm_time   Maximum time of a communication step\n");
+  printf("   -X mult_time       multiplier of mean time, to use as maximum "
+	 "communication time\n");
+  printf("The -X and -M option print a warning each time a communication pair "
+	 "is slower than either max_comm_time or mult_time*avg_time\n");
   printf("\n");
 }
 /**
@@ -131,23 +143,27 @@ void hp2p_util_display_help(char command[])
  **/
 void hp2p_util_read_configfile(hp2p_config *conf)
 {
-  FILE * fp = NULL;
+  FILE *fp = NULL;
   char *buffer = NULL;
   int max_len = 1024;
   char *key = NULL;
   char *value = NULL;
-  
-  fp = fopen(conf->inname,"r");
-  if(fp == NULL)
-    {
-      fprintf(stderr, "Cannot open %s ... exit\n", conf->inname);
-    }
 
-  buffer = (char *) malloc(max_len*sizeof(char));
-  key = (char *) malloc(max_len*sizeof(char));
-  value = (char *) malloc(max_len*sizeof(char));
+  fp = fopen(conf->inname, "r");
+  if (fp == NULL)
+  {
+    fprintf(stderr, "Cannot open %s ... exit\n", conf->inname);
+  }
+
+  buffer = (char *)malloc(max_len * sizeof(char));
+  key = (char *)malloc(max_len * sizeof(char));
+  value = (char *)malloc(max_len * sizeof(char));
 
   while (fgets(buffer, max_len - 1, fp))
+  {
+    // Remove trailing newline
+    buffer[strcspn(buffer, "\n")] = 0;
+    if (buffer[0] != '#')
     {
       // Remove trailing newline
       buffer[strcspn(buffer, "\n")] = 0;
@@ -180,8 +196,14 @@ void hp2p_util_read_configfile(hp2p_config *conf)
 	    strcpy(conf->plotlyjs, value);
   	  if (strcmp(key, "output_format") == 0)
 	    strcpy(conf->output_mode, value);
+      if (strcmp(key, "max_communication_time") == 0)
+      	conf->local_max_time = strtod(value, NULL);
+      if (strcmp(key, "time_mult") == 0)
+      	conf->time_mult = strtod(value, NULL);
 	}
+
     }
+  }
   free(buffer);
 
   fclose(fp);
@@ -204,7 +226,7 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
   hp2p_util_set_default_config(conf);
 
   // Parsing command line
-  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:t:a:y:p:f:")) != -1)
+  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:t:a:y:p:f:M:X:")) != -1)
   {
     switch (opt)
     {
@@ -234,7 +256,8 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
     {
       conf->build = atoi(optarg);
       free(conf->buildname);
-      conf->buildname = hp2p_algo_get_name(conf->build);;
+      conf->buildname = hp2p_algo_get_name(conf->build);
+      ;
     }
     break;
     case 't':
@@ -251,7 +274,11 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
       break;
     case 'f':
       strcpy(conf->output_mode, optarg);
+    case 'M':
+      conf->local_max_time = strtod(optarg, NULL);
       break;
+    case 'X':
+      conf->time_mult = strtod(optarg, NULL);
     default:
       break;
     }
@@ -295,7 +322,6 @@ void hp2p_util_init_tremain(hp2p_config *conf)
 double hp2p_util_tremain(hp2p_config conf)
 {
   double tremain = 0.0;
-  tremain = (double) conf.max_time + conf.__start_time - hp2p_util_get_time();
+  tremain = (double)conf.max_time + conf.__start_time - hp2p_util_get_time();
   return tremain;
 }
-

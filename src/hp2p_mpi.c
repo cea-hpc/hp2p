@@ -31,19 +31,23 @@ int hp2p_mpi_init(int *argc, char ***argv, hp2p_mpi_config *mpi_conf)
   MPI_Comm_rank(mpi_conf->comm, &mpi_conf->rank);
 
 #ifdef _ENABLE_CUDA_
-  MPI_Comm_split_type(mpi_conf->comm, MPI_COMM_TYPE_SHARED, mpi_conf->rank, MPI_INFO_NULL, &mpi_conf->local_comm);
+  MPI_Comm_split_type(mpi_conf->comm, MPI_COMM_TYPE_SHARED, mpi_conf->rank,
+		      MPI_INFO_NULL, &mpi_conf->local_comm);
   MPI_Comm_rank(mpi_conf->local_comm, &mpi_conf->local_rank);
   cudaSetDevice(mpi_conf->local_rank);
 #endif
-  
+
   mpi_conf->root = 0;
   MPI_Get_processor_name(mpi_conf->localhost, &namelen);
 #ifdef _ENABLE_CUDA_
-  sprintf(mpi_conf->localhost, "%s:%d", mpi_conf->localhost, mpi_conf->local_rank);
+  sprintf(mpi_conf->localhost, "%s:%d", mpi_conf->localhost,
+	  mpi_conf->local_rank);
 #endif
-  mpi_conf->hostlist = malloc(mpi_conf->nproc*MPI_MAX_PROCESSOR_NAME*sizeof(char));
+  mpi_conf->hostlist =
+      malloc(mpi_conf->nproc * MPI_MAX_PROCESSOR_NAME * sizeof(char));
   MPI_Allgather(mpi_conf->localhost, MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
-		mpi_conf->hostlist, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, mpi_conf->comm);
+		mpi_conf->hostlist, MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
+		mpi_conf->comm);
   return EXIT_SUCCESS;
 };
 
@@ -55,12 +59,13 @@ int hp2p_mpi_get_hostname(hp2p_mpi_config *mpi_conf, int anonymize)
 #ifdef _ENABLE_CUDA_
   sprintf(rank_str, "%s:%d", mpi_conf->localhost, mpi_conf->local_rank);
 #endif
-  
-  if(anonymize == 1)
-    {
-      MPI_Allgather(rank_str, MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
-		    mpi_conf->hostlist, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, mpi_conf->comm);
-    }
+
+  if (anonymize == 1)
+  {
+    MPI_Allgather(rank_str, MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
+		  mpi_conf->hostlist, MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
+		  mpi_conf->comm);
+  }
   return EXIT_SUCCESS;
 };
 
