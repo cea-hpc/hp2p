@@ -46,7 +46,7 @@ AC_CHECK_FUNCS([MPI_Init MPI_Finalize])
 #check if signal has been asked
 AC_ARG_ENABLE([signal],
               [AS_HELP_STRING([--enable-signal],
-                              [enable signal handling in output management (default is no).])
+                              [enable signal handling in output management (default is no). SIGUSR1 makes the process generate an output. SIGTERM makes the process generate an output and exit.])
               ],
               [],
               [enable_signal=no])
