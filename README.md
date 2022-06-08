@@ -1,7 +1,5 @@
 # HP2P
 
-[![Build Status](https://travis-ci.org/cea-hpc/hp2p.svg?branch=master)](https://travis-ci.org/cea-hpc/hp2p)
-
 **HP2P** (Heavy Peer To Peer) benchmark is a test which performs MPI Point-to-Point non-blocking communications between all MPI processes. Its goal is to measure the bandwidths and the latencies in a situation where the network is loaded. The benchmark can help to detect problems in a network like contentions or problems with switchs or links.
 
 The benchmark comes with a interactive GUI tool written in Python 2 with Matplotlib for post-processing the result.
@@ -18,14 +16,6 @@ Main program:
 
 * C++ compiler
 * MPI
-
-Visualization:
-
-* Python 2.x.x
-* Python plugins:
- * Numpy
- * Matplotlib
- * mpldatacursor
 
 ## Getting started
 
