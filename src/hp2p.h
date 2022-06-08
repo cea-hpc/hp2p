@@ -59,6 +59,7 @@ typedef struct
   char plotlyjs[MAXCHARFILE];     // Path to a plotly.min.js
   double __start_time;
   int align_size;
+  char output_mode[4];
   double local_max_time;
   double time_mult;
 } hp2p_config;
@@ -148,5 +149,5 @@ void hp2p_result_update(hp2p_result *result);
 void hp2p_result_display(hp2p_result *result);
 void hp2p_result_display_time(hp2p_result *result);
 void hp2p_result_display_bw(hp2p_result *result);
-void hp2p_result_write_html(hp2p_result result, hp2p_config conf, hp2p_mpi_config mpi_conf);
+void hp2p_result_write(hp2p_result result, hp2p_config conf, hp2p_mpi_config mpi_conf);
 #endif

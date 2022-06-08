@@ -45,6 +45,7 @@ void hp2p_util_set_default_config(hp2p_config *conf)
   conf->time_mult = -1.;
   conf->local_max_time = -1.;
   strcpy(conf->plotlyjs, "");
+  strcpy(conf->output_mode, "html");
 }
 /**
  * \fn     void hp2p_util_free_config(config *conf)
@@ -88,6 +89,7 @@ void hp2p_util_display_config(hp2p_config conf)
   printf("Output file                : %s\n", conf.outname);
   printf("Anonymize hostname         : %d\n", conf.anonymize);
   printf("Plotly.js file             : %s\n", conf.plotlyjs);
+  printf("output format              : %s\n", conf.output_mode);
   printf("time_mult                  : %s\n", conf.time_mult);
   printf("max_communication_time     : %s\n", conf.local_max_time);
   printf("\n");
@@ -124,6 +126,7 @@ void hp2p_util_display_help(char command[])
 	 "installed\n");
   printf("                      in your Python\n");
   printf("   -o output          Output file\n");
+  printf("   -f format       Output Format\n");
   printf("   -M max_comm_time   Maximum time of a communication step\n");
   printf("   -X mult_time       multiplier of mean time, to use as maximum "
 	 "communication time\n");
@@ -162,35 +165,43 @@ void hp2p_util_read_configfile(hp2p_config *conf)
     buffer[strcspn(buffer, "\n")] = 0;
     if (buffer[0] != '#')
     {
-      sscanf(buffer, "%s = %s", key, value);
-      if (strcmp(key, "nb_shuffle") == 0)
-	conf->nb_shuffle = atoi(value);
-      if (strcmp(key, "snap_freq") == 0)
-	conf->snap_freq = atoi(value);
-      if (strcmp(key, "msg_size") == 0)
-	conf->msg_size = atoi(value);
-      if (strcmp(key, "nb_msg") == 0)
-	conf->nb_msg = atoi(value);
-      if (strcmp(key, "align") == 0)
-	conf->align_size = atoi(value);
-      if (strcmp(key, "outname") == 0)
-	strcpy(conf->outname, value);
-      if (strcmp(key, "build") == 0)
-      {
-	conf->build = atoi(value);
-	free(conf->buildname);
-	conf->buildname = hp2p_algo_get_name(conf->build);
-      }
-      if (strcmp(key, "max_time") == 0)
-	conf->max_time = atoi(value);
-      if (strcmp(key, "anonymize") == 0)
-	conf->anonymize = atoi(value);
-      if (strcmp(key, "plotlyjs") == 0)
-	strcpy(conf->plotlyjs, value);
+      // Remove trailing newline
+      buffer[strcspn(buffer, "\n")] = 0;
+      if(buffer[0] != '#')
+	{
+	  sscanf(buffer, "%s = %s", key, value);
+	  if(strcmp(key, "nb_shuffle") == 0)
+	    conf->nb_shuffle = atoi(value);
+	  if (strcmp(key, "snap_freq") == 0)
+  	    conf->snap_freq = atoi(value);
+  	  if (strcmp(key, "msg_size") == 0)
+  	    conf->msg_size = atoi(value);
+  	  if (strcmp(key, "nb_msg") == 0)
+  	    conf->nb_msg = atoi(value);
+  	  if (strcmp(key, "align") == 0)
+  	    conf->align_size = atoi(value);
+	  if (strcmp(key, "outname") == 0)
+  	    strcpy(conf->outname, value);
+  	  if (strcmp(key, "build") == 0)
+	    {
+	      conf->build = atoi(value);
+	      free(conf->buildname);
+	      conf->buildname = hp2p_algo_get_name(conf->build);
+	    }
+  	  if (strcmp(key, "max_time") == 0)
+  	    conf->max_time = atoi(value);
+  	  if (strcmp(key, "anonymize") == 0)
+  	    conf->anonymize = atoi(value);
+  	  if (strcmp(key, "plotlyjs") == 0)
+	    strcpy(conf->plotlyjs, value);
+  	  if (strcmp(key, "output_format") == 0)
+	    strcpy(conf->output_mode, value);
       if (strcmp(key, "max_communication_time") == 0)
-	conf->local_max_time = strtod(value, NULL);
+      	conf->local_max_time = strtod(value, NULL);
       if (strcmp(key, "time_mult") == 0)
-	conf->time_mult = strtod(value, NULL);
+      	conf->time_mult = strtod(value, NULL);
+	}
+
     }
   }
   free(buffer);
@@ -215,7 +226,7 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
   hp2p_util_set_default_config(conf);
 
   // Parsing command line
-  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:t:a:y:p:M:X:")) != -1)
+  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:t:a:y:p:f:M:X:")) != -1)
   {
     switch (opt)
     {
@@ -261,12 +272,13 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
     case 'p':
       strcpy(conf->plotlyjs, optarg);
       break;
+    case 'f':
+      strcpy(conf->output_mode, optarg);
     case 'M':
       conf->local_max_time = strtod(optarg, NULL);
       break;
     case 'X':
       conf->time_mult = strtod(optarg, NULL);
-      break;
     default:
       break;
     }
