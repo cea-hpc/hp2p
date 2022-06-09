@@ -1,5 +1,5 @@
-// Copyright (C) 2010-2016 CEA/DAM
-// Copyright (C) 2010-2016 Laurent Nguyen <laurent.nguyen@cea.fr>
+// Copyright (C) 2010-2022 CEA/DAM
+// Copyright (C) 2010-2022 Laurent Nguyen <laurent.nguyen@cea.fr>
 //
 // This file is part of HP2P.
 //
