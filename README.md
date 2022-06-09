@@ -1,10 +1,8 @@
 # HP2P
 
-[![Build Status](https://travis-ci.org/cea-hpc/hp2p.svg?branch=master)](https://travis-ci.org/cea-hpc/hp2p)
-
 **HP2P** (Heavy Peer To Peer) benchmark is a test which performs MPI Point-to-Point non-blocking communications between all MPI processes. Its goal is to measure the bandwidths and the latencies in a situation where the network is loaded. The benchmark can help to detect problems in a network like contentions or problems with switchs or links.
 
-The benchmark comes with a interactive GUI tool written in Python 2 with Matplotlib for post-processing the result.
+The benchmark generates an HTML output with interactive visualisation with Plotly.
 
 ![alt tag](examples/gui-plotly.png)
 
@@ -19,14 +17,6 @@ Main program:
 * C++ compiler
 * MPI
 
-Visualization:
-
-* Python 2.x.x
-* Python plugins:
- * Numpy
- * Matplotlib
- * mpldatacursor
-
 ## Getting started
 
 ```
@@ -40,38 +30,79 @@ The program **hp2p.exe** is generated.
 
 ```
 $ hp2p.exe -h
- Usage: ./hp2p.exe [-h] [-n nit] [-k freq] [-m nb_msg]
-        [-s msg_size] [-o output] [-r hostfile]
-        [-b bin_timer] [-i conf_file]
- Options:
-    -i conf_file    Configuration file
-    -n nit          Number of iterations
-    -k freq         Iterations between snapshot
-    -s msg_size     Message size
-    -m nb_msg       Number of msg per comm
-    -b bin_timer    Generate Bin timer (false = 0 (default), true = 1)
-    -t max_time     Max duration
-    -c build        Algorithm to build couple (random = 0 (default), mirroring shift = 1)
-    -r hostfile     Hostfile
-    -o output       Output file
+Usage: ./hp2p.exe [-h] [-n nit] [-k freq] [-m nb_msg]
+       [-s msg_size] [-o output] [-a align] [-y]
+       [-p file]       [-i conf_file]
+       [-f bin|html] [-M max_comm_time] [-X mult_time]
+Options:
+   -i conf_file       Configuration file
+   -n nit             Number of iterations
+   -k freq            Iterations between snapshot
+   -s msg_size        Message size
+   -m nb_msg          Number of msg per comm
+   -a align           Alignment size for MPI buffer (default=8)
+   -t max_time        Max duration
+   -c build           Algorithm to build couple
+                      (random = 0 (default), mirroring shift = 1)
+   -y anon            1 = hide hostname, 0 = write hostname (default)
+   -p jsfile          Path to a plotly.min.js file to include into HTML
+                      Use get_plotlyjs.py script if plotly is installed
+                      in your Python distribution
+   -o output          Output file
+   -f format          Output format (binary format = bin, plotly
+                      format = html) [default: html]
+   -M max_comm_time   If set, print a warning each time a
+                      communication pair is slower than 
+                      max_comm_time
+   -X mult_time       If set, print a warning each time a
+                      communication pair is slower than 
+                      mult_time * mean of previous
+                      communication times
 ```
 The program is written in MPI:
 ```
- $ mpirun -n 32 ./hp2p.exe -n 1000 -s 1024 -m 10 -b 1 -o first_test
+ $ mpirun -n 32 ./hp2p.exe -n 1000 -s 1024 -m 10 -b 1 -o first_test -o output.html
 ```
 This command will launch the benchmark on 32 MPI processes and will run 1000 iterations. An iteration consists on a draw of random couples of MPI processes and then a phase where 10 successive communications of 1024 bytes will be performed.
 The benchmark aims to test the network, so it is better to launch the benchmark with 1 MPI process per node.
-At the end of the execution, a *hostfile.txt* file and files prefixed with *first_test* are created.
+At the end of the execution, the output.html file wan be viewed with a web browser.
 
-## Visualization
-### Matplotlib GUI 
+## Using CUDA
+
+### Compilation
+
 ```
-$ vizhp2p -H hostfile.txt first_test
+$ ./configure --enable-cuda --with-cuda=${CUDA_ROOT}
+$ make
+$ make install
 ```
-### Plotly HTML
+
+### Running
+
+hp2p should be launched with one MPI process for one GPU. If you have 4 GPUs on one node, you should launch 4 MPI processes on the node. 
+
+## Using UNIX signals
+
+Signals can be sent to one of hp2p processes to make the program generate an output:
+
+### Compilation
+
 ```
-$ ./vizhp2p_html -H hostfile.txt -c "Unamed cluster" -o first_test.html first_test.bin
+$ ./configure --enable-signal
+$ make
+$ make install
 ```
+
+### Running
+
+```
+$ mpirun -n 32 ./hp2p.exe -n 1000 -s 1024 -m 10 -b 1 -o first_test -o output.html
+
+$ kill -s SIGUSR1 <hp2p process PID> # make hp2p generate an output
+
+$ kill -s SIGTERM <hp2p process PID> # make hp2p generate an output and exit
+```
+
 
 ## Contributing
 ## Authors
@@ -86,7 +117,7 @@ Laurent Nguyen - <laurent.nguyen@cea.fr>
 
 ## License
 
-Copyright 2010-2017 CEA/DAM/DIF<br />
+Copyright 2010-2022 CEA/DAM/DIF<br />
 <br />
 HP2P is distributed under the CeCILL-C. See the included files <br />
 Licence_CeCILL-C_V1-en.txt (English version) and <br />
