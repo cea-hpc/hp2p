@@ -79,15 +79,7 @@ $ make install
 
 ### Running
 
-hp2p.exe needs the CUDA_VISIBLE_DEVICES environment variable to be set to the correct NVIDIA GPU.
-
-```
-$ cat ./get_local_rank
-export CUDA_VISIBLE_DEVICES=0
-$*
-
-$ mpirun -n 32 ./get_local_rank ./hp2p.exe -n 1000 -s 1024 -m 10 -b 1 -o first_test -o output.html
-```
+hp2p should be launched with one MPI process for one GPU. If you have 4 GPUs on one node, you should launch 4 MPI processes on the node. 
 
 ## Using UNIX signals
 
