@@ -90,8 +90,8 @@ void hp2p_util_display_config(hp2p_config conf)
   printf("Anonymize hostname         : %d\n", conf.anonymize);
   printf("Plotly.js file             : %s\n", conf.plotlyjs);
   printf("output format              : %s\n", conf.output_mode);
-  printf("time_mult                  : %s\n", conf.time_mult);
-  printf("max_communication_time     : %s\n", conf.local_max_time);
+  printf("time_mult                  : %lf\n", conf.time_mult);
+  printf("max_communication_time     : %lf\n", conf.local_max_time);
   printf("\n");
   printf("===============================\n");
   printf("\n");
