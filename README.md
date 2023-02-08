@@ -124,6 +124,6 @@ Licence_CeCILL-C_V1-en.txt (English version) and <br />
 Licence_CeCILL-C_V1-fr.txt (French version) or visit  <br />
 http://www.cecill.info for details.
 
-## Acknowledgments
+## Notes
 
-The benchmark is similar to the FZ-Juelich [linktest](http://www.fz-juelich.de/ias/jsc/EN/Expertise/Support/Software/LinkTest/_node.html) benchmark.
+The benchmark is similar to the FZ-Juelich [linktest](https://www.fz-juelich.de/en/ias/jsc/services/user-support/jsc-software-tools/linktest) benchmark.
