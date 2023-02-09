@@ -1,6 +1,6 @@
 # HP2P
 
-**HP2P** (Heavy Peer To Peer) benchmark is a test which performs MPI Point-to-Point non-blocking communications between all MPI processes. Its goal is to measure the bandwidths and the latencies in a situation where the network is loaded. The benchmark can help to detect problems in a network like contentions or problems with switchs or links.
+**HP2P** (Heavy Peer To Peer) benchmark is a test which performs MPI Point-to-Point non-blocking communications between all MPI processes. Its goal is to measure the bandwidths and the latencies in a situation where the network is busy. This benchmark can help to detect network problems like congestions or problems with switches or links.
 
 The benchmark generates an HTML output with interactive visualisation with Plotly.
 
