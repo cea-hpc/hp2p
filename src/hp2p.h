@@ -11,9 +11,9 @@
 
 /**
  * \file      hp2p.h
- * \author    Laurent Nguyen <laurent.nguyen@cea.fr>
+ * \author    Laurent Nguyen <laurent.nguyen@cea.fr>, Marc Joos <marc.joos@cea.fr>
  * \version   4.0
- * \date      21 June 2021
+ * \date      June 21 2023
  * \brief     HP2P Benchmark
  *
  * \details   No
@@ -34,6 +34,10 @@
 #ifdef _ENABLE_CUDA_
 #include <cuda.h>
 #include <cuda_runtime.h>
+#endif
+#ifdef _ENABLE_ROCM_
+#include <hip/hip_runtime.h>
+#include <hip/hip_runtime.h>
 #endif
 
 #define MAXCHARFILE 4096

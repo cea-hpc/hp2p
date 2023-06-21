@@ -71,6 +71,24 @@ AC_ARG_WITH([cuda],
 AS_CASE([$enable_cuda],
 	[yes], [build_cuda=yes])
 
+-# Checks for ROCm
+AC_ARG_ENABLE([rocm],
+              [AS_HELP_STRING([--enable-rocm],
+                                         [Enable ROCm benchmarks])
+              ],
+              [],
+              [enable_rocm=no])
+
+AC_ARG_WITH([rocm],
+            [AS_HELP_STRING([--with-rocm=@<:@ROCm installation path@:>@],
+                            [Provide path to ROCm installation])
+            ],
+            [AS_CASE([$with_rocm],
+                     [yes|no], [],
+                     [CPPFLAGS="-I$with_rocm/include $CPPFLAGS"
+                      LDFLAGS="-L$with_rocm/lib64 -Wl,-rpath=$with_rocm/lib64 -L$with_rocm/lib -Wl,-rpath=$with_rocm/lib -lamdhip64 $LDFLAGS"])
+            ])
+
 AS_CASE([$enable_signal],
 	[yes], [CPPFLAGS="-D_HP2P_SIGNAL $CPPFLAGS"])
 
@@ -82,6 +100,14 @@ AS_IF([test "x$build_cuda" = xyes], [
        AC_CHECK_HEADERS([cuda.h], [],
                         [AC_MSG_ERROR([cannot include cuda.h])])
        AC_DEFINE([_ENABLE_CUDA_], [1], [Enable CUDA])
+       ])
+AS_IF([test "x$enable_rocm" = xyes], [
+       AC_DEFINE([__HIP_PLATFORM_HCC__])
+       AC_CHECK_HEADERS([hip/hip_runtime_api.h], [],
+                        [AC_MSG_ERROR([cannot include hip/hip_runtime_api.h])])
+       AC_SEARCH_LIBS([hipFree], [amdhip64], [],
+                      [AC_MSG_ERROR([cannot link with -lamdhip64])])
+       AC_DEFINE([_ENABLE_ROCM_], [1], [Enable ROCm])
        ])
 
 AC_CONFIG_FILES([Makefile

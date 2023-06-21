@@ -11,9 +11,9 @@
 
 /**
  * \file      hp2p.c
- * \author    Laurent Nguyen <laurent.nguyen@cea.fr>
+ * \author    Laurent Nguyen <laurent.nguyen@cea.fr>, Marc Joos <marc.joos@cea.fr>
  * \version   4.0
- * \date      21 June 2021
+ * \date      June 21 2023
  * \brief     HP2P Benchmark
  *
  * \details   No
@@ -43,7 +43,7 @@ double hp2p_iteration(hp2p_mpi_config mpi_conf, hp2p_config conf, int other)
   int i = 0;
   int *buf1 = NULL;
   int *buf2 = NULL;
-#ifdef _ENABLE_CUDA_
+#if defined(_ENABLE_CUDA_) || defined(_ENABLE_ROCM_)
   int *d_buf1 = NULL;
   int *d_buf2 = NULL;
 #endif
@@ -86,17 +86,23 @@ double hp2p_iteration(hp2p_mpi_config mpi_conf, hp2p_config conf, int other)
 
     cudaMemcpy(d_buf1, buf1, n * sizeof(int), cudaMemcpyHostToDevice);
 #endif
+#ifdef _ENABLE_ROCM_
+    hipMalloc(&d_buf1, n * sizeof(int));
+    hipMalloc(&d_buf2, n * sizeof(int));
+
+    hipMemcpy(d_buf1, buf1, n * sizeof(int), hipMemcpyHostToDevice);
+#endif
 
     MPI_Request req[2];
     MPI_Status status[2];
 
     // First comm
-#ifndef _ENABLE_CUDA_
-    MPI_Irecv(buf2, n, MPI_INT, other, 0, comm, &req[0]);
-    MPI_Isend(buf1, n, MPI_INT, other, 0, comm, &req[1]);
-#else
+#if defined(_ENABLE_CUDA_) || defined(_ENABLE_ROCM_)
     MPI_Irecv(d_buf2, n, MPI_INT, other, 0, comm, &req[0]);
     MPI_Isend(d_buf1, n, MPI_INT, other, 0, comm, &req[1]);
+#else
+    MPI_Irecv(buf2, n, MPI_INT, other, 0, comm, &req[0]);
+    MPI_Isend(buf1, n, MPI_INT, other, 0, comm, &req[1]);
 #endif
     MPI_Waitall(2, req, status);
 
@@ -106,12 +112,12 @@ double hp2p_iteration(hp2p_mpi_config mpi_conf, hp2p_config conf, int other)
     t0 = hp2p_util_get_time();
     for (i = 0; i < nb_msg; i++)
     {
-#ifndef _ENABLE_CUDA_
-      MPI_Irecv(buf2, n, MPI_INT, other, 0, comm, &req[0]);
-      MPI_Isend(buf1, n, MPI_INT, other, 0, comm, &req[1]);
-#else
+#if defined(_ENABLE_CUDA_) || defined(_ENABLE_ROCM_)
       MPI_Irecv(d_buf2, n, MPI_INT, other, 0, comm, &req[0]);
       MPI_Isend(d_buf1, n, MPI_INT, other, 0, comm, &req[1]);
+#else
+      MPI_Irecv(buf2, n, MPI_INT, other, 0, comm, &req[0]);
+      MPI_Isend(buf1, n, MPI_INT, other, 0, comm, &req[1]);
 #endif
       MPI_Waitall(2, req, status);
     }
@@ -125,6 +131,10 @@ double hp2p_iteration(hp2p_mpi_config mpi_conf, hp2p_config conf, int other)
 #ifdef _ENABLE_CUDA_
     cudaFree(d_buf1);
     cudaFree(d_buf2);
+#endif
+#ifdef _ENABLE_ROCM__
+    hipFree(d_buf1);
+    hipFree(d_buf2);
 #endif
 
     time_hp2p = (t1 - t0) / nb_msg;

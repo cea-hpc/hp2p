@@ -11,9 +11,9 @@
 
 /**
  * \file      hp2p_mpi.c
- * \author    Laurent Nguyen <laurent.nguyen@cea.fr>
+ * \author    Laurent Nguyen <laurent.nguyen@cea.fr>, Marc Joos <marc.joos@cea.fr>
  * \version   4.0
- * \date      21 June 2021
+ * \date      June 21 2023
  * \brief     HP2P Benchmark
  *
  * \details   No
@@ -36,10 +36,16 @@ int hp2p_mpi_init(int *argc, char ***argv, hp2p_mpi_config *mpi_conf)
   MPI_Comm_rank(mpi_conf->local_comm, &mpi_conf->local_rank);
   cudaSetDevice(mpi_conf->local_rank);
 #endif
+#ifdef _ENABLE_ROCM_
+  MPI_Comm_split_type(mpi_conf->comm, MPI_COMM_TYPE_SHARED, mpi_conf->rank,
+		      MPI_INFO_NULL, &mpi_conf->local_comm);
+  MPI_Comm_rank(mpi_conf->local_comm, &mpi_conf->local_rank);
+  hipSetDevice(mpi_conf->local_rank);
+#endif
 
   mpi_conf->root = 0;
   MPI_Get_processor_name(mpi_conf->localhost, &namelen);
-#ifdef _ENABLE_CUDA_
+#if defined(_ENABLE_CUDA_) || defined(_ENABLE_ROCM_)
   sprintf(mpi_conf->localhost, "%s:%d", mpi_conf->localhost,
 	  mpi_conf->local_rank);
 #endif
@@ -56,7 +62,7 @@ int hp2p_mpi_get_hostname(hp2p_mpi_config *mpi_conf, int anonymize)
   char rank_str[MPI_MAX_PROCESSOR_NAME] = "";
 
   sprintf(rank_str, "rank_%d", mpi_conf->rank);
-#ifdef _ENABLE_CUDA_
+#if defined(_ENABLE_CUDA_) || defined(_ENABLE_ROCM_)
   sprintf(rank_str, "%s:%d", mpi_conf->localhost, mpi_conf->local_rank);
 #endif
 

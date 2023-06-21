@@ -11,9 +11,9 @@
 
 /**
  * \file      hp2p_util.c
- * \author    Laurent Nguyen <laurent.nguyen@cea.fr>
+ * \author    Laurent Nguyen <laurent.nguyen@cea.fr>, Marc Joos <marc.joos@cea.fr>
  * \version   4.0
- * \date      21 June 2021
+ * \date      June 21 2023
  * \brief     HP2P Benchmark
  *
  * \details   No
@@ -92,6 +92,16 @@ void hp2p_util_display_config(hp2p_config conf)
   printf("output format              : %s\n", conf.output_mode);
   printf("time_mult                  : %lf\n", conf.time_mult);
   printf("max_communication_time     : %lf\n", conf.local_max_time);
+#ifdef _ENABLE_CUDA_
+  printf("CUDA support                : activated\n");
+#else
+  printf("CUDA support                : not activated\n");
+#endif
+#ifdef _ENABLE_ROCM_
+  printf("ROCm support                : activated\n");
+#else
+  printf("ROCm support                : not activated\n");
+#endif
   printf("\n");
   printf("===============================\n");
   printf("\n");
