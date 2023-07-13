@@ -92,7 +92,7 @@ void hp2p_result_update(hp2p_result *result)
 	result->sum_time += result->g_time[i * nproc + j];
 	result->sum_bw += result->g_bw[i * nproc + j];
 	count++;
-	// min
+ 	// min
 	if (result->g_time[i * nproc + j] < result->min_time)
 	{
 	  result->min_time = result->g_time[i * nproc + j];
@@ -123,14 +123,29 @@ void hp2p_result_update(hp2p_result *result)
   result->avg_time = result->sum_time / (double)count;
   result->avg_bw = result->sum_bw / (double)count;
   result->count_time = count;
+
+
+  // standard deviation
+  result->stdd_bw = 0.0;
+  result->stdd_time = 0.0;
+  for (i = 0; i < nproc; i++)
+    for (j = 0; j < nproc; j++)
+    {
+      if (result->g_time[i * nproc + j] > 0.0)
+	{
+	  result->stdd_time += (result->g_time[i * nproc + j] - result->avg_time)*(result->g_time[i * nproc + j] - result->avg_time);
+	  result->stdd_bw += (result->g_bw[i * nproc + j] - result->avg_bw)*(result->g_bw[i * nproc + j] - result->avg_bw);
+	}
+    }
+  
   if (nproc < 2)
   {
     result->stdd_bw = 0.0;
   }
   else
   {
-    result->stdd_bw = sqrt(result->sum_bw / ((double)(count - 1)));
-    result->stdd_time = sqrt(result->sum_time / ((double)(count - 1)));
+    result->stdd_bw = sqrt(result->stdd_bw / ((double)count));
+    result->stdd_time = sqrt(result->stdd_time / ((double)count));
   }
 }
 
