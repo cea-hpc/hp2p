@@ -41,6 +41,7 @@
 #endif
 
 #define MAXCHARFILE 4096
+#define PLOTLY_VERSION "2.24.1"
 
 /**
  * \struct config

@@ -347,12 +347,12 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
       else
 	fprintf(fp,
 		"<script "
-		"src=\"https://cdn.plot.ly/plotly-2.1.0.min.js\"></script>\n");
+		"src=\"https://cdn.plot.ly/plotly-%s.min.js\"></script>\n", PLOTLY_VERSION);
     }
     else
       fprintf(fp,
 	      "<script "
-	      "src=\"https://cdn.plot.ly/plotly-2.1.0.min.js\"></script>\n");
+	      "src=\"https://cdn.plot.ly/plotly-%s.min.js\"></script>\n", PLOTLY_VERSION);
     fprintf(fp, "<body style=\"background-color:rgb(220, 220, 220);\">\n");
     fprintf(fp, "<div class=\"banner\">\n");
     fprintf(fp, "<h2>HP2P results vizualisation</h2>\n");
