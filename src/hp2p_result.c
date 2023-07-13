@@ -388,22 +388,29 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
     fprintf(fp, "</div>\n");
     fprintf(fp, "</div>\n");
     fprintf(fp, "<script type=\"text/javascript\">\n");
-    fprintf(fp, "var hostlist = [\n");
+    fprintf(fp, "// hostlist start\n");
+    fprintf(fp, "var hostlist = \n[");
     for (i = 0; i < nproc; i++)
       fprintf(fp, "    \"%s\", ",
 	      &mpi_conf.hostlist[MPI_MAX_PROCESSOR_NAME * i]);
-    fprintf(fp, "    \n");
-    fprintf(fp, "    ];\n");
-    fprintf(fp, "var bandwidth = [\n");
+    fprintf(fp, "    ]\n;\n");
+    fprintf(fp, "// hostlist end\n");
+    fprintf(fp, "// msg_size start\n");
+    fprintf(fp, "var msg_size = \n");
+    fprintf(fp, "    %d\n", conf.msg_size);
+    fprintf(fp, "    ;\n");
+    fprintf(fp, "// msg_size end\n");
+    fprintf(fp, "// bandwidth start\n");
+    fprintf(fp, "var bandwidth = \n[");
     for (i = 0; i < nproc; i++)
     {
       fprintf(fp, "    [");
       for (j = 0; j < nproc; j++)
 	fprintf(fp, " %0.3lf,", result.g_bw[i * nproc + j] / (1024.0 * 1024.0));
-      fprintf(fp, " ],\n");
+      fprintf(fp, " ], ");
     }
-    fprintf(fp, "     \n");
-    fprintf(fp, "    ];\n");
+    fprintf(fp, "    ]\n;\n");
+    fprintf(fp, "// bandwidth end\n");
     fprintf(fp, "      var bw_avg = [];\n");
     fprintf(fp, "      for (const bw_line of bandwidth) {\n");
     fprintf(fp, "	var sum = bw_line.reduce((a, b) => a + b, 0);\n");
