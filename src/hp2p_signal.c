@@ -7,9 +7,9 @@ void signal_handle(int sig)
   if (sig != SIGUSR1 && sig != SIGALRM)
     tokill = sig;
   else
-    tokill=0;
+    tokill = 0;
   towrite = 1;
-  signal(sig,signal_handle);
+  signal(sig, signal_handle);
 }
 void init_signal_writer(hp2p_config conf)
 {
@@ -40,8 +40,8 @@ void check_signal(hp2p_result result, hp2p_config conf,
     }
     if (tokill != 0)
     {
-      if(rank == root)
-        printf("received signal %d exiting\n",tokill);
+      if (rank == root)
+	printf("received signal %d exiting\n", tokill);
       exit(tokill);
     }
     if (conf.alarm != 0.)

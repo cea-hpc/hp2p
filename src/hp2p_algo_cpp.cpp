@@ -26,20 +26,21 @@ extern "C"
 {
   void hp2p_algo_random(int *v, int size)
   {
-    int i, j;
+    int i = 0;
+    int j = 0;
     std::vector<int> lst;
     for (i = 0; i < size; i++)
       lst.push_back(i);
-    
+
     std::random_shuffle(lst.begin(), lst.end());
     // LN : odd size
     for (int ii = 0; ii < size - 1; ii += 2)
-      {
-	i = lst[ii];
-	j = lst[ii + 1];
-	v[i] = j;
-	v[j] = i;
-      }
+    {
+      i = lst[ii];
+      j = lst[ii + 1];
+      v[i] = j;
+      v[j] = i;
+    }
     if (size % 2 == 1)
       v[lst[size - 1]] = lst[size - 1];
   };

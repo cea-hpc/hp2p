@@ -11,7 +11,8 @@
 
 /**
  * \file      hp2p_mpi.c
- * \author    Laurent Nguyen <laurent.nguyen@cea.fr>, Marc Joos <marc.joos@cea.fr>
+ * \author    Laurent Nguyen <laurent.nguyen@cea.fr>
+ *            Marc Joos <marc.joos@cea.fr>
  * \version   4.0
  * \date      June 21 2023
  * \brief     HP2P Benchmark

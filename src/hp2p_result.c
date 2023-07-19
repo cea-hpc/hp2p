@@ -92,7 +92,7 @@ void hp2p_result_update(hp2p_result *result)
 	result->sum_time += result->g_time[i * nproc + j];
 	result->sum_bw += result->g_bw[i * nproc + j];
 	count++;
- 	// min
+	// min
 	if (result->g_time[i * nproc + j] < result->min_time)
 	{
 	  result->min_time = result->g_time[i * nproc + j];
@@ -124,7 +124,6 @@ void hp2p_result_update(hp2p_result *result)
   result->avg_bw = result->sum_bw / (double)count;
   result->count_time = count;
 
-
   // standard deviation
   result->stdd_bw = 0.0;
   result->stdd_time = 0.0;
@@ -132,12 +131,15 @@ void hp2p_result_update(hp2p_result *result)
     for (j = 0; j < nproc; j++)
     {
       if (result->g_time[i * nproc + j] > 0.0)
-	{
-	  result->stdd_time += (result->g_time[i * nproc + j] - result->avg_time)*(result->g_time[i * nproc + j] - result->avg_time);
-	  result->stdd_bw += (result->g_bw[i * nproc + j] - result->avg_bw)*(result->g_bw[i * nproc + j] - result->avg_bw);
-	}
+      {
+	result->stdd_time +=
+	    (result->g_time[i * nproc + j] - result->avg_time) *
+	    (result->g_time[i * nproc + j] - result->avg_time);
+	result->stdd_bw += (result->g_bw[i * nproc + j] - result->avg_bw) *
+			   (result->g_bw[i * nproc + j] - result->avg_bw);
+      }
     }
-  
+
   if (nproc < 2)
   {
     result->stdd_bw = 0.0;
@@ -193,7 +195,8 @@ void hp2p_result_display_bw(hp2p_result *result)
     printf("\n");
   }
 }
-void hp2p_result_write_binary(hp2p_result result, hp2p_config conf, hp2p_mpi_config mpi_conf)
+void hp2p_result_write_binary(hp2p_result result, hp2p_config conf,
+			      hp2p_mpi_config mpi_conf)
 {
 
   FILE *fp = NULL;
@@ -213,27 +216,27 @@ void hp2p_result_write_binary(hp2p_result result, hp2p_config conf, hp2p_mpi_con
   ltm = localtime(&now);
   sprintf(date, "%d/%d/%d", ltm->tm_mday, 1 + ltm->tm_mon, 1900 + ltm->tm_year);
   sprintf(hour, "%d:%d:%d", ltm->tm_hour, ltm->tm_min, ltm->tm_sec);
-  filename = (char *) malloc((strlen(conf.outname)+16)*sizeof(char));
+  filename = (char *)malloc((strlen(conf.outname) + 16) * sizeof(char));
   strcpy(filename, conf.outname);
   strcat(filename, ".bin");
   fp = fopen(filename, "wb");
   /* file format is :
- *  nb rank 
- *  hostlist[nbrank]
- *  result[nbrank*nbrank]
- */
-  if(fp != NULL)
-    {
-      nproc = mpi_conf.nproc;
-      fwrite(&nproc,sizeof(int),1,fp);
-      fwrite(mpi_conf.hostlist,sizeof(char),nproc*MPI_MAX_PROCESSOR_NAME,fp);
-      fwrite(result.g_bw,sizeof(double),nproc*nproc,fp);
-      fwrite(result.g_time,sizeof(double),nproc*nproc,fp);
-      fwrite(result.g_count,sizeof(int),nproc*nproc,fp);
-      fclose(fp);
-    }
+   *  nb rank
+   *  hostlist[nbrank]
+   *  result[nbrank*nbrank]
+   */
+  if (fp != NULL)
+  {
+    nproc = mpi_conf.nproc;
+    fwrite(&nproc, sizeof(int), 1, fp);
+    fwrite(mpi_conf.hostlist, sizeof(char), nproc * MPI_MAX_PROCESSOR_NAME, fp);
+    fwrite(result.g_bw, sizeof(double), nproc * nproc, fp);
+    fwrite(result.g_time, sizeof(double), nproc * nproc, fp);
+    fwrite(result.g_count, sizeof(int), nproc * nproc, fp);
+    fclose(fp);
+  }
   free(filename);
- hp2p_result_display_bw(&result);
+  hp2p_result_display_bw(&result);
 }
 
 void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
@@ -347,12 +350,14 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
       else
 	fprintf(fp,
 		"<script "
-		"src=\"https://cdn.plot.ly/plotly-%s.min.js\"></script>\n", PLOTLY_VERSION);
+		"src=\"https://cdn.plot.ly/plotly-%s.min.js\"></script>\n",
+		PLOTLY_VERSION);
     }
     else
       fprintf(fp,
 	      "<script "
-	      "src=\"https://cdn.plot.ly/plotly-%s.min.js\"></script>\n", PLOTLY_VERSION);
+	      "src=\"https://cdn.plot.ly/plotly-%s.min.js\"></script>\n",
+	      PLOTLY_VERSION);
     fprintf(fp, "<body style=\"background-color:rgb(220, 220, 220);\">\n");
     fprintf(fp, "<div class=\"banner\">\n");
     fprintf(fp, "<h2>HP2P results vizualisation</h2>\n");
@@ -500,11 +505,11 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
   }
   free(filename);
 }
-void hp2p_result_write(hp2p_result result, hp2p_config conf, hp2p_mpi_config mpi_conf)
+void hp2p_result_write(hp2p_result result, hp2p_config conf,
+		       hp2p_mpi_config mpi_conf)
 {
-if (!strcmp(conf.output_mode,"bin"))
-    hp2p_result_write_binary(result,conf,mpi_conf);
-else
-    hp2p_result_write_html(result,conf,mpi_conf);
-    
+  if (!strcmp(conf.output_mode, "bin"))
+    hp2p_result_write_binary(result, conf, mpi_conf);
+  else
+    hp2p_result_write_html(result, conf, mpi_conf);
 }
