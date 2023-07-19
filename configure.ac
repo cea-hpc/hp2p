@@ -1,8 +1,8 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.63])
-AC_INIT([HP2P], [4.0], [laurent.nguyen@cea.fr])
+AC_PREREQ([2.71])
+AC_INIT([HP2P],[4.0],[laurent.nguyen@cea.fr])
 AM_INIT_AUTOMAKE([-Wall])
 AC_CONFIG_SRCDIR([src/])
 
@@ -21,7 +21,15 @@ AC_PROG_RANLIB
 # Checks for libraries.
 
 # Checks for header files.
-AC_HEADER_STDC
+m4_warn([obsolete],
+[The preprocessor macro `STDC_HEADERS' is obsolete.
+  Except in unusual embedded environments, you can safely include all
+  ISO C90 headers unconditionally.])dnl
+# Autoupdate added the next two lines to ensure that your configure
+# script's behavior did not change.  They are probably safe to remove.
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
+
 AC_CHECK_HEADERS([string])
 AC_CHECK_HEADERS([vector algorithm list])
 AC_CHECK_HEADERS([stdio.h stdlib.h string.h])
