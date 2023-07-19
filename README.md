@@ -4,6 +4,8 @@
 
 The benchmark generates an HTML output with interactive visualisation with Plotly.
 
+The HTML output file can be processed to generate a static PNG file with command line (no Web browser needed).
+
 ![alt tag](examples/gui-plotly.png)
 
 New: HTML report can be generated instead of Python GUI for portability. The following link gives an example of a report.
@@ -16,6 +18,12 @@ Main program:
 
 * C++ compiler
 * MPI
+
+HTML parser:
+
+* Python 3
+* plotly
+* kaleido
 
 ## Getting started
 
@@ -103,6 +111,19 @@ $ kill -s SIGUSR1 <hp2p process PID> # make hp2p generate an output
 $ kill -s SIGTERM <hp2p process PID> # make hp2p generate an output and exit
 ```
 
+## Visualisation
+
+### HTML 
+
+The benchmark generate a HTML file that can be displayed with a recent web browser supporting HTML5 standard.
+
+### Static PNG file
+
+A PNG file can be generated from the HTML file: 
+
+```
+$ hp2p_html_parser.py png <output>.html 
+```
 
 ## Contributing
 ## Authors
@@ -117,7 +138,7 @@ Laurent Nguyen - <laurent.nguyen@cea.fr>
 
 ## License
 
-Copyright 2010-2022 CEA/DAM/DIF<br />
+Copyright 2010-2023 CEA/DAM/DIF<br />
 <br />
 HP2P is distributed under the CeCILL-C. See the included files <br />
 Licence_CeCILL-C_V1-en.txt (English version) and <br />
