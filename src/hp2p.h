@@ -11,7 +11,8 @@
 
 /**
  * \file      hp2p.h
- * \author    Laurent Nguyen <laurent.nguyen@cea.fr>, Marc Joos <marc.joos@cea.fr>
+ * \author    Laurent Nguyen <laurent.nguyen@cea.fr>
+ *            Marc Joos <marc.joos@cea.fr>
  * \version   4.0
  * \date      June 21 2023
  * \brief     HP2P Benchmark
@@ -51,17 +52,17 @@
  */
 typedef struct
 {
-  int nb_shuffle;		  // number of iterations
-  int snap_freq;		  // number of iterations between snapshots
-  int msg_size;			  // message size
-  int nb_msg;			  // number of messages per communication
-  char inname[MAXCHARFILE];       // configuration filename
-  char outname[MAXCHARFILE];      // output filename
-  int max_time;	        	  // max duration time in seconds for the run
-  int build;	         	  // Algorithm to build couple list
-  char *buildname;		  // Name of algorithm to build couple list
-  int anonymize;                  // Write hostname or not
-  char plotlyjs[MAXCHARFILE];     // Path to a plotly.min.js
+  int nb_shuffle;	      // number of iterations
+  int snap_freq;	      // number of iterations between snapshots
+  int msg_size;		      // message size
+  int nb_msg;		      // number of messages per communication
+  char inname[MAXCHARFILE];   // configuration filename
+  char outname[MAXCHARFILE];  // output filename
+  int max_time;		      // max duration time in seconds for the run
+  int build;		      // Algorithm to build couple list
+  char *buildname;	      // Name of algorithm to build couple list
+  int anonymize;	      // Write hostname or not
+  char plotlyjs[MAXCHARFILE]; // Path to a plotly.min.js
   double __start_time;
   int align_size;
   char output_mode[4];
@@ -119,12 +120,12 @@ typedef struct
   int i_min_bw;
   int j_min_bw;
 
-  hp2p_mpi_config* mpi_conf;
+  hp2p_mpi_config *mpi_conf;
 } hp2p_result;
 
 // hp2p_algo
 int hp2p_algo_get_num();
-char* hp2p_algo_get_name(int algo);
+char *hp2p_algo_get_name(int algo);
 void hp2p_algo_build_couples(int *v, int size, int algo);
 void hp2p_algo_mirroring_shift(int *v, int size);
 void hp2p_algo_random(int *v, int size);
@@ -146,16 +147,15 @@ int hp2p_mpi_get_hostname(hp2p_mpi_config *mpi_conf, int anonymize);
 int hp2p_mpi_finalize(hp2p_mpi_config *mpi_conf);
 
 // hp2p_result
-void hp2p_result_alloc(hp2p_result *result,
-		       hp2p_mpi_config *mpi_conf,
-		       int msg_size, int nb_msg
-		       );
+void hp2p_result_alloc(hp2p_result *result, hp2p_mpi_config *mpi_conf,
+		       int msg_size, int nb_msg);
 void hp2p_result_free(hp2p_result *result);
 void hp2p_result_update(hp2p_result *result);
 void hp2p_result_display(hp2p_result *result);
 void hp2p_result_display_time(hp2p_result *result);
 void hp2p_result_display_bw(hp2p_result *result);
-void hp2p_result_write(hp2p_result result, hp2p_config conf, hp2p_mpi_config mpi_conf);
+void hp2p_result_write(hp2p_result result, hp2p_config conf,
+		       hp2p_mpi_config mpi_conf);
 void init_signal_writer(hp2p_config conf);
 void check_signal(hp2p_result result, hp2p_config conf,
 		  hp2p_mpi_config mpi_conf, int rank, int root);
