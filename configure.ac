@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.71])
+AC_PREREQ([2.69])
 AC_INIT([HP2P],[4.0],[laurent.nguyen@cea.fr])
 AM_INIT_AUTOMAKE([-Wall])
 AC_CONFIG_SRCDIR([src/])
@@ -27,8 +27,6 @@ m4_warn([obsolete],
   ISO C90 headers unconditionally.])dnl
 # Autoupdate added the next two lines to ensure that your configure
 # script's behavior did not change.  They are probably safe to remove.
-AC_CHECK_INCLUDES_DEFAULT
-AC_PROG_EGREP
 
 AC_CHECK_HEADERS([string])
 AC_CHECK_HEADERS([vector algorithm list])
