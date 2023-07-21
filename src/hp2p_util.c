@@ -22,6 +22,11 @@
 
 #include "hp2p.h"
 
+const char *hp2p_algo[] = {
+    "random",
+    "mirror shift",
+};
+
 /**
  * \fn     void hp2p_set_default_config(config *conf)
  * \brief  load default config
