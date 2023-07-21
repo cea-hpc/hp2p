@@ -44,6 +44,8 @@
 #define MAXCHARFILE 4096
 #define PLOTLY_VERSION "2.24.1"
 
+extern const char *hp2p_algo[];
+
 /**
  * \struct config
  * \brief  Configuration object
