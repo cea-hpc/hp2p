@@ -94,7 +94,7 @@ hp2p should be launched with one MPI process for one GPU. If you have 4 GPUs on 
 ### Compilation
 
 ```
-$ ./configure --enable-rocm --with-rocm=${CUDA_ROOT}
+$ ./configure --enable-rocm --with-rocm=${ROCM_ROOT}
 $ make
 $ make install
 
