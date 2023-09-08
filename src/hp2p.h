@@ -67,7 +67,7 @@ typedef struct
   char plotlyjs[MAXCHARFILE]; // Path to a plotly.min.js
   double __start_time;
   int align_size;
-  char output_mode[4];
+  char output_mode[32];
   int alarm;
   double local_max_time;
   double time_mult;
