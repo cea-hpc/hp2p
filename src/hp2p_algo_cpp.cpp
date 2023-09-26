@@ -21,6 +21,9 @@
 
 #include <vector>
 #include <algorithm>
+#include <cstdlib>
+
+int hp2p_random_func(int i) { return std::rand() % i; };
 
 extern "C"
 {
@@ -32,7 +35,7 @@ extern "C"
     for (i = 0; i < size; i++)
       lst.push_back(i);
 
-    std::random_shuffle(lst.begin(), lst.end());
+    std::random_shuffle(lst.begin(), lst.end(), hp2p_random_func);
     // LN : odd size
     for (int ii = 0; ii < size - 1; ii += 2)
     {

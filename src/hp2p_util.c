@@ -45,6 +45,7 @@ void hp2p_util_set_default_config(hp2p_config *conf)
   conf->max_time = 86400; // 1 day
   conf->build = 0;	  // Random
   conf->buildname = hp2p_algo_get_name(conf->build);
+  conf->seed = 0;
   conf->__start_time = 0.0;
   conf->align_size = 8;
   conf->anonymize = 0;
@@ -72,6 +73,7 @@ void hp2p_util_free_config(hp2p_config *conf)
   conf->max_time = 0;
   conf->build = 0;
   free(conf->buildname);
+  conf->seed = 0;
 }
 /**
  * \fn     void display_config(config conf)
@@ -92,6 +94,7 @@ void hp2p_util_display_config(hp2p_config conf)
   printf("Alignment for MPI buffer   : %d\n", conf.align_size);
   printf("Max time                   : %d\n", conf.max_time);
   printf("Build couple algorithm     : %s\n", conf.buildname);
+  printf("Seed                       : %d\n", conf.seed);
   printf("Output file                : %s\n", conf.outname);
   printf("Anonymize hostname         : %d\n", conf.anonymize);
   printf("Plotly.js file             : %s\n", conf.plotlyjs);
@@ -135,6 +138,9 @@ void hp2p_util_display_help(char command[])
   printf("   -t max_time        Max duration\n");
   printf("   -c build           Algorithm to build couple\n");
   printf("                      (random = 0 (default), mirroring shift = 1)\n");
+  printf(
+      "   -r seed            Seed for initializing random number generators\n");
+  printf("                      (default = 0, using time = -1)\n");
   printf("   -y anon            1 = hide hostname, 0 = write hostname "
 	 "(default)\n");
   printf("   -p jsfile          Path to a plotly.min.js file to include into "
@@ -208,6 +214,8 @@ void hp2p_util_read_configfile(hp2p_config *conf)
 	  free(conf->buildname);
 	  conf->buildname = hp2p_algo_get_name(conf->build);
 	}
+	if (strcmp(key, "seed") == 0)
+	  conf->seed = atoi(value);
 	if (strcmp(key, "max_time") == 0)
 	  conf->max_time = atoi(value);
 	if (strcmp(key, "anonymize") == 0)
@@ -245,7 +253,7 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
   hp2p_util_set_default_config(conf);
 
   // Parsing command line
-  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:t:a:y:p:f:M:X:")) != -1)
+  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:r:t:a:y:p:f:M:X:")) != -1)
   {
     switch (opt)
     {
@@ -279,6 +287,9 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
       ;
     }
     break;
+    case 'r':
+      conf->seed = atoi(optarg);
+      break;
     case 't':
       conf->max_time = atoi(optarg);
       break;

@@ -196,6 +196,16 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
   msg_size = conf.msg_size;
   hp2p_result_alloc(&result, &mpi_conf, msg_size, conf.nb_msg);
   hp2p_util_init_tremain(&conf);
+  // Initialize random generator
+  if (conf.seed < 0)
+  {
+    srand(time(NULL));
+  }
+  else
+  {
+    srand(conf.seed);
+  }
+
 #ifdef _HP2P_SIGNAL
   init_signal_writer(conf);
 #endif

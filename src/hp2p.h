@@ -63,6 +63,7 @@ typedef struct
   int max_time;		      // max duration time in seconds for the run
   int build;		      // Algorithm to build couple list
   char *buildname;	      // Name of algorithm to build couple list
+  int seed;                   // Seed for random generator
   int anonymize;	      // Write hostname or not
   char plotlyjs[MAXCHARFILE]; // Path to a plotly.min.js
   double __start_time;
