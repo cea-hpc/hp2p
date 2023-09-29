@@ -162,8 +162,8 @@ void hp2p_result_update(hp2p_result *result)
 void hp2p_result_display(hp2p_result *result)
 {
   double m = 1048576.0;
-  // m = 1.0;
-  printf(" == SUMMARY ==\n\n");
+  printf("\n\n");
+  printf(" === SUMMARY ===\n\n");
   printf(" Min bandwidth : %0.2lf MB/s\n", result->min_bw / m);
   printf(" Max bandwidth : %0.2lf MB/s\n", result->max_bw / m);
   printf(" Avg bandwidth : %0.2lf MB/s\n", result->avg_bw / m);
@@ -174,6 +174,7 @@ void hp2p_result_display(hp2p_result *result)
   printf(" Avg latency   : %0.2lf us\n", result->avg_time * 1000000);
   printf(" Std latency   : %0.2lf us\n", result->stdd_time * 1000000);
   printf("\n");
+  printf(" ===============\n\n");
 }
 
 void hp2p_result_display_time(hp2p_result *result)

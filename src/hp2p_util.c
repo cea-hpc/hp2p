@@ -84,35 +84,35 @@ void hp2p_util_free_config(hp2p_config *conf)
  **/
 void hp2p_util_display_config(hp2p_config conf)
 {
-  printf("=== Benchmark configuration ===\n");
-  printf("\n");
-  printf("Configuration file         : %s\n", conf.inname);
-  printf("Number of iterations       : %d\n", conf.nb_shuffle);
-  printf("Iterations between snapshot: %d\n", conf.snap_freq);
-  printf("Message size               : %d\n", conf.msg_size);
-  printf("Number of msg per comm     : %d\n", conf.nb_msg);
-  printf("Alignment for MPI buffer   : %d\n", conf.align_size);
-  printf("Max time                   : %d\n", conf.max_time);
-  printf("Build couple algorithm     : %s\n", conf.buildname);
-  printf("Seed                       : %d\n", conf.seed);
-  printf("Output file                : %s\n", conf.outname);
-  printf("Anonymize hostname         : %d\n", conf.anonymize);
-  printf("Plotly.js file             : %s\n", conf.plotlyjs);
-  printf("output format              : %s\n", conf.output_mode);
-  printf("time_mult                  : %lf\n", conf.time_mult);
-  printf("max_communication_time     : %lf\n", conf.local_max_time);
+  printf(" === Benchmark configuration ===\n");
+  printf(" \n");
+  printf(" Configuration file          : %s\n", conf.inname);
+  printf(" Number of iterations        : %d\n", conf.nb_shuffle);
+  printf(" Iterations between snapshot : %d\n", conf.snap_freq);
+  printf(" Message size                : %d\n", conf.msg_size);
+  printf(" Number of msg per comm      : %d\n", conf.nb_msg);
+  printf(" Alignment for MPI buffer    : %d\n", conf.align_size);
+  printf(" Max time                    : %d\n", conf.max_time);
+  printf(" Build couple algorithm      : %s\n", conf.buildname);
+  printf(" Seed                        : %d\n", conf.seed);
+  printf(" Output file                 : %s\n", conf.outname);
+  printf(" Anonymize hostname          : %d\n", conf.anonymize);
+  printf(" Plotly.js file              : %s\n", conf.plotlyjs);
+  printf(" output format               : %s\n", conf.output_mode);
+  printf(" time_mult                   : %lf\n", conf.time_mult);
+  printf(" max_communication_time      : %lf\n", conf.local_max_time);
 #ifdef _ENABLE_CUDA_
-  printf("CUDA support                : activated\n");
+  printf(" CUDA support                : activated\n");
 #else
-  printf("CUDA support                : not activated\n");
+  printf(" CUDA support                : not activated\n");
 #endif
 #ifdef _ENABLE_ROCM_
-  printf("ROCm support                : activated\n");
+  printf(" ROCm support                : activated\n");
 #else
-  printf("ROCm support                : not activated\n");
+  printf(" ROCm support                : not activated\n");
 #endif
   printf("\n");
-  printf("===============================\n");
+  printf(" ===============================\n");
   printf("\n");
 }
 /**
