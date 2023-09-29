@@ -78,6 +78,14 @@ void hp2p_result_update(hp2p_result *result)
   result->sum_bw = 0.0;
   result->min_bw = 1.0e15;
   result->max_bw = 0.0;
+  result->i_min_time = 0;
+  result->j_min_time = 0;
+  result->i_min_bw = 0;
+  result->j_min_bw = 0;
+  result->i_max_time = 0;
+  result->j_max_time = 0;
+  result->i_max_bw = 0;
+  result->j_max_bw = 0;
 
   for (i = 0; i < nproc; i++)
     for (j = 0; j < nproc; j++)
