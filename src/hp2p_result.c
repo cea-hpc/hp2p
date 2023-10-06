@@ -22,15 +22,16 @@
 #include "hp2p.h"
 
 void hp2p_result_alloc(hp2p_result *result, hp2p_mpi_config *mpi_conf,
-		       int msg_size, int nb_msg)
+		       hp2p_config *conf)
 {
   int i = 0;
   int j = 0;
   int nproc = 0;
   nproc = mpi_conf->nproc;
   result->mpi_conf = mpi_conf;
-  result->msg_size = msg_size;
-  result->nb_msg = nb_msg;
+  result->conf = conf;
+  result->msg_size = conf->msg_size;
+  result->nb_msg = conf->nb_msg;
   result->l_time = (double *)malloc(nproc * sizeof(double));
   result->l_count = (int *)malloc(nproc * sizeof(int));
   result->g_count = (int *)malloc(nproc * nproc * sizeof(int));
@@ -43,6 +44,8 @@ void hp2p_result_alloc(hp2p_result *result, hp2p_mpi_config *mpi_conf,
     for (j = 0; j < nproc; j++)
       result->g_bw[i * nproc + j] = 0.0;
   }
+  result->l_bsbw = (double *)calloc(conf->nb_shuffle, sizeof(double));
+  result->g_bsbw = (double *)calloc(conf->nb_shuffle, sizeof(double));
 }
 
 void hp2p_result_free(hp2p_result *result)
@@ -52,6 +55,8 @@ void hp2p_result_free(hp2p_result *result)
   free(result->g_count);
   free(result->g_time);
   free(result->g_bw);
+  free(result->l_bsbw);
+  free(result->g_bsbw);
 }
 
 void hp2p_result_update(hp2p_result *result)
@@ -71,6 +76,9 @@ void hp2p_result_update(hp2p_result *result)
 		MPI_DOUBLE, result->mpi_conf->comm);
   MPI_Allgather(result->l_count, nproc, MPI_INT, result->g_count, nproc,
 		MPI_INT, result->mpi_conf->comm);
+
+  MPI_Allreduce(result->l_bsbw, result->g_bsbw, result->conf->nb_shuffle,
+		MPI_DOUBLE, MPI_SUM, result->mpi_conf->comm);
 
   result->sum_time = 0.0;
   result->min_time = 1.0e15;
@@ -157,22 +165,62 @@ void hp2p_result_update(hp2p_result *result)
     result->stdd_bw = sqrt(result->stdd_bw / ((double)count));
     result->stdd_time = sqrt(result->stdd_time / ((double)count));
   }
+
+  // Bisection bandwidth
+  result->sum_bsbw = 0.0;
+  result->min_bsbw = 1.0e15;
+  result->max_bsbw = 0.0;
+  result->stdd_bsbw = 0.0;
+
+  for (i = 0; i < result->conf->nb_shuffle; i++)
+  {
+    result->g_bsbw[i] = result->g_bsbw[i] / 2.0;
+    result->sum_bsbw += result->g_bsbw[i];
+    if (result->g_bsbw[i] > result->max_bsbw)
+      result->max_bsbw = result->g_bsbw[i];
+    if (result->g_bsbw[i] < result->min_bsbw)
+      result->min_bsbw = result->g_bsbw[i];
+  }
+  result->avg_bsbw = result->sum_bsbw / result->conf->nb_shuffle;
+  for (i = 0; i < result->conf->nb_shuffle; i++)
+    result->stdd_bsbw += (result->g_bsbw[i] - result->avg_bsbw) *
+			 (result->g_bsbw[i] - result->avg_bsbw);
+
+  if (result->conf->nb_shuffle < 2)
+    result->stdd_bsbw = 0.0;
+  else
+    result->stdd_bsbw =
+	sqrt(result->stdd_bsbw / ((double)result->conf->nb_shuffle));
 }
 
 void hp2p_result_display(hp2p_result *result)
 {
   double m = 1048576.0;
+  int ncouples = result->mpi_conf->nproc / 2;
   printf("\n\n");
   printf(" === SUMMARY ===\n\n");
-  printf(" Min bandwidth : %0.2lf MB/s\n", result->min_bw / m);
-  printf(" Max bandwidth : %0.2lf MB/s\n", result->max_bw / m);
-  printf(" Avg bandwidth : %0.2lf MB/s\n", result->avg_bw / m);
-  printf(" Std bandwidth : %0.2lf MB/s\n", result->stdd_bw / m);
+  printf(" Min bandwidth            : %0.2lf MB/s\n", result->min_bw / m);
+  printf(" Max bandwidth            : %0.2lf MB/s\n", result->max_bw / m);
+  printf(" Avg bandwidth            : %0.2lf MB/s\n", result->avg_bw / m);
+  printf(" Std bandwidth            : %0.2lf MB/s\n", result->stdd_bw / m);
   printf("\n");
-  printf(" Min latency   : %0.2lf us\n", result->min_time * 1000000);
-  printf(" Max latency   : %0.2lf us\n", result->max_time * 1000000);
-  printf(" Avg latency   : %0.2lf us\n", result->avg_time * 1000000);
-  printf(" Std latency   : %0.2lf us\n", result->stdd_time * 1000000);
+  printf(" Min latency              : %0.2lf us\n", result->min_time * 1000000);
+  printf(" Max latency              : %0.2lf us\n", result->max_time * 1000000);
+  printf(" Avg latency              : %0.2lf us\n", result->avg_time * 1000000);
+  printf(" Std latency              : %0.2lf us\n",
+	 result->stdd_time * 1000000);
+  printf("\n");
+  printf(" Min bisection bandwidth  : %0.2lf MB/s\n", result->min_bsbw / m);
+  printf(" Max bisection bandwidth  : %0.2lf MB/s\n", result->max_bsbw / m);
+  printf(" Avg bisection bandwidth  : %0.2lf MB/s\n", result->avg_bsbw / m);
+  printf(" Std bisection bandwidth  : %0.2lf MB/s\n", result->stdd_bsbw / m);
+  printf("\n");
+  printf(" Min bisection efficiency : %0.2lf %%\n",
+	 100.0 * result->min_bsbw / (ncouples * result->min_bw));
+  printf(" Max bisection efficiency : %0.2lf %%\n",
+	 100.0 * result->max_bsbw / (ncouples * result->max_bw));
+  printf(" Avg bisection efficiency : %0.2lf %%\n",
+	 100.0 * result->avg_bsbw / (ncouples * result->avg_bw));
   printf("\n");
   printf(" ===============\n\n");
 }
@@ -204,8 +252,7 @@ void hp2p_result_display_bw(hp2p_result *result)
     printf("\n");
   }
 }
-void hp2p_result_write_binary(hp2p_result result, hp2p_config conf,
-			      hp2p_mpi_config mpi_conf)
+void hp2p_result_write_binary(hp2p_result result)
 {
 
   FILE *fp = NULL;
@@ -220,13 +267,13 @@ void hp2p_result_write_binary(hp2p_result result, hp2p_config conf,
   char ch = '\0';
   int pos = 0;
 
-  nproc = mpi_conf.nproc;
+  nproc = result.mpi_conf->nproc;
   now = time(0);
   ltm = localtime(&now);
   sprintf(date, "%d/%d/%d", ltm->tm_mday, 1 + ltm->tm_mon, 1900 + ltm->tm_year);
   sprintf(hour, "%d:%d:%d", ltm->tm_hour, ltm->tm_min, ltm->tm_sec);
-  filename = (char *)malloc((strlen(conf.outname) + 16) * sizeof(char));
-  strcpy(filename, conf.outname);
+  filename = (char *)malloc((strlen(result.conf->outname) + 16) * sizeof(char));
+  strcpy(filename, result.conf->outname);
   strcat(filename, ".bin");
   fp = fopen(filename, "wb");
   /* file format is :
@@ -236,9 +283,9 @@ void hp2p_result_write_binary(hp2p_result result, hp2p_config conf,
    */
   if (fp != NULL)
   {
-    nproc = mpi_conf.nproc;
+    nproc = result.mpi_conf->nproc;
     fwrite(&nproc, sizeof(int), 1, fp);
-    fwrite(mpi_conf.hostlist, sizeof(char), nproc * MPI_MAX_PROCESSOR_NAME, fp);
+    fwrite(result.mpi_conf->hostlist, sizeof(char), nproc * MPI_MAX_PROCESSOR_NAME, fp);
     fwrite(result.g_bw, sizeof(double), nproc * nproc, fp);
     fwrite(result.g_time, sizeof(double), nproc * nproc, fp);
     fwrite(result.g_count, sizeof(int), nproc * nproc, fp);
@@ -248,8 +295,7 @@ void hp2p_result_write_binary(hp2p_result result, hp2p_config conf,
   hp2p_result_display_bw(&result);
 }
 
-void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
-			    hp2p_mpi_config mpi_conf)
+void hp2p_result_write_html(hp2p_result result)
 {
 
   FILE *fp = NULL;
@@ -264,14 +310,16 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
   int nproc = 0;
   char ch = '\0';
   int pos = 0;
+  double m = 1024.0 * 1024.0;
 
-  nproc = mpi_conf.nproc;
+  int nb_shuffle = result.conf->nb_shuffle;
+  nproc = result.mpi_conf->nproc;
   now = time(0);
   ltm = localtime(&now);
   sprintf(date, "%d/%d/%d", ltm->tm_mday, 1 + ltm->tm_mon, 1900 + ltm->tm_year);
   sprintf(hour, "%d:%d:%d", ltm->tm_hour, ltm->tm_min, ltm->tm_sec);
-  filename = (char *)malloc((strlen(conf.outname) + 16) * sizeof(char));
-  strcpy(filename, conf.outname);
+  filename = (char *)malloc((strlen(result.conf->outname) + 16) * sizeof(char));
+  strcpy(filename, result.conf->outname);
   strcat(filename, ".html");
   fp = fopen(filename, "w");
   if (fp != NULL)
@@ -281,7 +329,7 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
     fprintf(fp, "  <head>\n");
     fprintf(fp, "    <meta charset=\"utf-8\" />\n");
     fprintf(fp, "     <title>CEA-HPC - HP2P on %s - %s at %s</title>\n",
-	    &mpi_conf.hostlist[0], date, hour);
+	    &(result.mpi_conf->hostlist[0]), date, hour);
     fprintf(fp, "  </head>\n");
     fprintf(fp, "  <style>\n");
     fprintf(fp, "\n");
@@ -339,9 +387,9 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
     fprintf(fp, "</style>\n");
     fprintf(fp, "<script type=\"text/javascript\">window.PlotlyConfig = "
 		"{MathJaxConfig: 'local'};</script>\n");
-    if (strlen(conf.plotlyjs) > 0)
+    if (strlen(result.conf->plotlyjs) > 0)
     {
-      fplotly = fopen(conf.plotlyjs, "r");
+      fplotly = fopen(result.conf->plotlyjs, "r");
       if (fplotly != NULL)
       {
 	fprintf(fp, "<script type=\"text/javascript\">\n");
@@ -375,29 +423,31 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
     fprintf(fp, "<div class=stats-container>\n");
     fprintf(fp, "<div>\n");
     fprintf(fp, "<h2>Details</h2>\n");
-    fprintf(fp, "Number of iterations: %d<br>\n", conf.nb_shuffle);
-    fprintf(fp, "Message size: %d bytes<br>\n", conf.msg_size);
-    fprintf(fp, "Number of messages per communication: %d<br>\n", conf.nb_msg);
-    fprintf(fp, "MPI buffer alignment: %d<br>\n", conf.align_size);
-    fprintf(fp, "Algorithm: %s<br>\n", hp2p_algo[conf.build]);
+    fprintf(fp, "Number of iterations: %d<br>\n", result.conf->nb_shuffle);
+    fprintf(fp, "Message size: %d bytes<br>\n", result.conf->msg_size);
+    fprintf(fp, "Number of messages per communication: %d<br>\n",
+	    result.conf->nb_msg);
+    fprintf(fp, "MPI buffer alignment: %d<br>\n", result.conf->align_size);
+    fprintf(fp, "Algorithm: %s<br>\n", hp2p_algo[result.conf->build]);
     fprintf(fp, "</div>\n");
     fprintf(fp, "</div>\n");
 
     fprintf(fp, "<div class=stats-container >\n");
+
     fprintf(fp, "<div>\n");
     fprintf(fp, "<h2>Bandwidth Statistics</h2>\n");
-    fprintf(fp, "Minimum Bandwidth: %0.2lf MB/s between %s and %s<br>\n",
-	    result.min_bw / (1024.0 * 1024.0),
-	    &mpi_conf.hostlist[MPI_MAX_PROCESSOR_NAME * result.i_min_bw],
-	    &mpi_conf.hostlist[MPI_MAX_PROCESSOR_NAME * result.j_min_bw]);
-    fprintf(fp, "Maximum Bandwidth: %0.2lf MB/s between %s and %s<br>\n",
-	    result.max_bw / (1024.0 * 1024.0),
-	    &mpi_conf.hostlist[MPI_MAX_PROCESSOR_NAME * result.i_max_bw],
-	    &mpi_conf.hostlist[MPI_MAX_PROCESSOR_NAME * result.j_max_bw]);
-    fprintf(fp, "Average: %0.2lf MB/s<br>\n",
-	    result.avg_bw / (1024.0 * 1024.0));
-    fprintf(fp, "Standard deviation: %0.2lf MB/s<br>\n",
-	    result.stdd_bw / (1024.0 * 1024.0));
+    fprintf(
+	fp, "Minimum Bandwidth: %0.2lf MB/s between %s and %s<br>\n",
+	result.min_bw / m,
+	&result.mpi_conf->hostlist[MPI_MAX_PROCESSOR_NAME * result.i_min_bw],
+	&result.mpi_conf->hostlist[MPI_MAX_PROCESSOR_NAME * result.j_min_bw]);
+    fprintf(
+	fp, "Maximum Bandwidth: %0.2lf MB/s between %s and %s<br>\n",
+	result.max_bw / m,
+	&result.mpi_conf->hostlist[MPI_MAX_PROCESSOR_NAME * result.i_max_bw],
+	&result.mpi_conf->hostlist[MPI_MAX_PROCESSOR_NAME * result.j_max_bw]);
+    fprintf(fp, "Average: %0.2lf MB/s<br>\n", result.avg_bw / m);
+    fprintf(fp, "Standard deviation: %0.2lf MB/s<br>\n", result.stdd_bw / m);
     fprintf(fp, "</div>\n");
 
     fprintf(fp, "<div>\n");
@@ -406,19 +456,30 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
 	fp,
 	"Minimum Latency: %0.2lf <span>&#181;</span>s between %s and %s<br>\n",
 	result.min_time * 1.e6,
-	&mpi_conf.hostlist[MPI_MAX_PROCESSOR_NAME * result.i_min_time],
-	&mpi_conf.hostlist[MPI_MAX_PROCESSOR_NAME * result.j_min_time]);
+	&result.mpi_conf->hostlist[MPI_MAX_PROCESSOR_NAME * result.i_min_time],
+	&result.mpi_conf->hostlist[MPI_MAX_PROCESSOR_NAME * result.j_min_time]);
     fprintf(
 	fp,
 	"Maximum Latency: %0.2lf <span>&#181;</span>s between %s and %s<br>\n",
 	result.max_time * 1.e6,
-	&mpi_conf.hostlist[MPI_MAX_PROCESSOR_NAME * result.i_max_time],
-	&mpi_conf.hostlist[MPI_MAX_PROCESSOR_NAME * result.j_max_time]);
+	&result.mpi_conf->hostlist[MPI_MAX_PROCESSOR_NAME * result.i_max_time],
+	&result.mpi_conf->hostlist[MPI_MAX_PROCESSOR_NAME * result.j_max_time]);
     fprintf(fp, "Average: %0.2lf <span>&#181;</span>s<br>\n",
 	    result.avg_time * 1.e6);
     fprintf(fp, "Standard deviation: %0.2lf <span>&#181;</span>s<br>\n",
 	    result.stdd_time * 1.e6);
     fprintf(fp, "</div>\n");
+
+    fprintf(fp, "<div>\n");
+    fprintf(fp, "<h2>Bisection bandwidth Statistics</h2>\n");
+    fprintf(fp, "Minimum Bisection Bandwidth: %0.2lf MB/s<br>\n",
+	    result.min_bsbw / m);
+    fprintf(fp, "Maximum Bisection Bandwidth: %0.2lf MB/s<br>\n",
+	    result.max_bsbw / m);
+    fprintf(fp, "Average: %0.2lf MB/s<br>\n", result.avg_bsbw / m);
+    fprintf(fp, "Standard deviation: %0.2lf MB/s<br>\n", result.stdd_bsbw / m);
+    fprintf(fp, "</div>\n");
+
     fprintf(fp, "</div>\n");
 
     fprintf(fp, "<script type=\"text/javascript\">\n");
@@ -426,12 +487,12 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
     fprintf(fp, "var hostlist = \n[");
     for (i = 0; i < nproc; i++)
       fprintf(fp, "    \"%s\", ",
-	      &mpi_conf.hostlist[MPI_MAX_PROCESSOR_NAME * i]);
+	      &result.mpi_conf->hostlist[MPI_MAX_PROCESSOR_NAME * i]);
     fprintf(fp, "    ]\n;\n");
     fprintf(fp, "// hostlist end\n");
     fprintf(fp, "// msg_size start\n");
     fprintf(fp, "var msg_size = \n");
-    fprintf(fp, "    %d\n", conf.msg_size);
+    fprintf(fp, "    %d\n", result.conf->msg_size);
     fprintf(fp, "    ;\n");
     fprintf(fp, "// msg_size end\n");
     fprintf(fp, "// bandwidth start\n");
@@ -440,7 +501,7 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
     {
       fprintf(fp, "    [");
       for (j = 0; j < nproc; j++)
-	fprintf(fp, " %0.3lf,", result.g_bw[i * nproc + j] / (1024.0 * 1024.0));
+	fprintf(fp, " %0.3lf,", result.g_bw[i * nproc + j] / m);
       fprintf(fp, " ], ");
     }
     fprintf(fp, "    ]\n;\n");
@@ -449,6 +510,14 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
     fprintf(fp, "      for (const bw_line of bandwidth) {\n");
     fprintf(fp, "	var sum = bw_line.reduce((a, b) => a + b, 0);\n");
     fprintf(fp, "	bw_avg.push(sum/(bw_line.length-1));}\n");
+    fprintf(fp, "// bisection bandwidth start\n");
+    fprintf(fp, "var bisection_bandwidth = \n[");
+    for (i = 0; i < nb_shuffle; i++)
+    {
+      fprintf(fp, " %lf,", result.g_bsbw[i] / m);
+    }
+    fprintf(fp, "    ]\n;\n");
+    fprintf(fp, "// bisection bandwidth end\n");
     fprintf(fp, "</script>\n");
     fprintf(fp, "<div class=flex-container >\n");
     fprintf(
@@ -500,6 +569,7 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
     fprintf(fp, "  </script>\n");
     fprintf(fp, "</div>\n");
     fprintf(fp, "\n");
+
     fprintf(fp, "\n");
     fprintf(fp, "<div class=flex-container >\n");
     fprintf(fp, "<div><div id=\"12345\" style=\"height: 800px; width: 80%%;\" "
@@ -518,6 +588,32 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
 	"{\"text\": \"Distribution of average bandwidth per node (MB/s)\"}, "
 	"\"yaxis\": {\"title\": \"Number of nodes\"}, \"xaxis\": {\"title\": "
 	"\"Bandwidth (MB/s)\"} }, {\"plotlyServerURL\": \"https://plot.ly\", "
+	"\"linkText\": \"Export to plot.ly\", \"showLink\": false}\n");
+    fprintf(fp, "    )\n");
+    fprintf(fp, "  </script>\n");
+    fprintf(fp, "</div>\n");
+    fprintf(fp, "\n");
+    fprintf(fp, "</div>\n");
+
+    fprintf(fp, "\n");
+    fprintf(fp, "<div class=flex-container >\n");
+    fprintf(fp, "<div><div id=\"123456\" style=\"height: 800px; width: 80%%;\" "
+		"class=\"plotly-graph-div\"></div>\n");
+    fprintf(fp, "  <script type=\"text/javascript\">\n");
+    fprintf(fp, "    window.PLOTLYENV=window.PLOTLYENV || {};\n");
+    fprintf(fp, "    window.PLOTLYENV.BASE_URL=\"https://plot.ly\";\n");
+    fprintf(fp, "    Plotly.newPlot(\"123456\",\n");
+    fprintf(fp, "    [{\"uid\": \"5678910\",\n");
+    fprintf(fp, "    \"name\": \"\",\n");
+    fprintf(fp, "    \"boxmean\": \"sd\",\n");
+    fprintf(fp, "    \"y\": bisection_bandwidth,\n");
+    fprintf(fp, "    \"type\": \"box\"}],\n");
+    fprintf(
+	fp,
+	"    {\"height\": 800, \"width\": 800, \"autosize\": true, \"title\": "
+	"{\"text\": \"Bisection bandwidth (MB/s)\"}, "
+	"\"yaxis\": {\"title\": \"Bandwidth (MB/s)\"} }, {\"plotlyServerURL\": "
+	"\"https://plot.ly\", "
 	"\"linkText\": \"Export to plot.ly\", \"showLink\": false}\n");
     fprintf(fp, "    )\n");
     fprintf(fp, "  </script>\n");
@@ -544,11 +640,10 @@ void hp2p_result_write_html(hp2p_result result, hp2p_config conf,
   }
   free(filename);
 }
-void hp2p_result_write(hp2p_result result, hp2p_config conf,
-		       hp2p_mpi_config mpi_conf)
+void hp2p_result_write(hp2p_result result)
 {
-  if (!strcmp(conf.output_mode, "bin"))
-    hp2p_result_write_binary(result, conf, mpi_conf);
+  if (!strcmp(result.conf->output_mode, "bin"))
+    hp2p_result_write_binary(result);
   else
-    hp2p_result_write_html(result, conf, mpi_conf);
+    hp2p_result_write_html(result);
 }

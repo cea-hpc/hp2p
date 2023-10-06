@@ -123,7 +123,16 @@ typedef struct
   int i_min_bw;
   int j_min_bw;
 
+  double *l_bsbw;
+  double *g_bsbw;
+  double avg_bsbw;
+  double sum_bsbw;
+  double min_bsbw;
+  double max_bsbw;
+  double stdd_bsbw;
+
   hp2p_mpi_config *mpi_conf;
+  hp2p_config *conf;
 } hp2p_result;
 
 // hp2p_algo
@@ -151,15 +160,13 @@ int hp2p_mpi_finalize(hp2p_mpi_config *mpi_conf);
 
 // hp2p_result
 void hp2p_result_alloc(hp2p_result *result, hp2p_mpi_config *mpi_conf,
-		       int msg_size, int nb_msg);
+		       hp2p_config *conf);
 void hp2p_result_free(hp2p_result *result);
 void hp2p_result_update(hp2p_result *result);
 void hp2p_result_display(hp2p_result *result);
 void hp2p_result_display_time(hp2p_result *result);
 void hp2p_result_display_bw(hp2p_result *result);
-void hp2p_result_write(hp2p_result result, hp2p_config conf,
-		       hp2p_mpi_config mpi_conf);
+void hp2p_result_write(hp2p_result result);
 void init_signal_writer(hp2p_config conf);
-void check_signal(hp2p_result result, hp2p_config conf,
-		  hp2p_mpi_config mpi_conf, int rank, int root);
+void check_signal(hp2p_result result);
 #endif

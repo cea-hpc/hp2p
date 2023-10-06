@@ -125,15 +125,15 @@ void hp2p_util_display_help(char command[])
 {
   printf("Usage: %s [-h] [-n nit] [-k freq] [-m nb_msg]\n", command);
   printf("       [-s msg_size] [-o output] [-a align] [-y]\n");
-  printf("       [-p file]");
+  printf("       [-p file] [-r seed] [-w bsbw] ");
   printf("       [-i conf_file]\n");
   printf("       [-f bin|html] [-M max_comm_time] [-X mult_time]\n");
   printf("Options:\n");
   printf("   -i conf_file       Configuration file\n");
-  printf("   -n nit             Number of iterations\n");
+  printf("   -n nit             Number of iterations (default: 5000)\n");
   printf("   -k freq            Iterations between snapshot\n");
-  printf("   -s msg_size        Message size\n");
-  printf("   -m nb_msg          Number of msg per comm\n");
+  printf("   -s msg_size        Message size (default: 1MB)\n");
+  printf("   -m nb_msg          Number of msg per comm (default: 10)\n");
   printf("   -a align           Alignment size for MPI buffer (default=8)\n");
   printf("   -t max_time        Max duration\n");
   printf("   -c build           Algorithm to build couple\n");
