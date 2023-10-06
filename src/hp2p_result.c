@@ -22,15 +22,16 @@
 #include "hp2p.h"
 
 void hp2p_result_alloc(hp2p_result *result, hp2p_mpi_config *mpi_conf,
-		       int msg_size, int nb_msg)
+		       hp2p_config *conf)
 {
   int i = 0;
   int j = 0;
   int nproc = 0;
   nproc = mpi_conf->nproc;
   result->mpi_conf = mpi_conf;
-  result->msg_size = msg_size;
-  result->nb_msg = nb_msg;
+  result->conf = conf;
+  result->msg_size = conf->msg_size;
+  result->nb_msg = conf->nb_msg;
   result->l_time = (double *)malloc(nproc * sizeof(double));
   result->l_count = (int *)malloc(nproc * sizeof(int));
   result->g_count = (int *)malloc(nproc * nproc * sizeof(int));
@@ -43,6 +44,8 @@ void hp2p_result_alloc(hp2p_result *result, hp2p_mpi_config *mpi_conf,
     for (j = 0; j < nproc; j++)
       result->g_bw[i * nproc + j] = 0.0;
   }
+  result->l_bsbw = (double *)calloc(conf->nb_shuffle, sizeof(double));
+  result->g_bsbw = (double *)calloc(conf->nb_shuffle, sizeof(double));
 }
 
 void hp2p_result_free(hp2p_result *result)
@@ -52,6 +55,8 @@ void hp2p_result_free(hp2p_result *result)
   free(result->g_count);
   free(result->g_time);
   free(result->g_bw);
+  free(result->l_bsbw);
+  free(result->g_bsbw);
 }
 
 void hp2p_result_update(hp2p_result *result)
@@ -71,6 +76,9 @@ void hp2p_result_update(hp2p_result *result)
 		MPI_DOUBLE, result->mpi_conf->comm);
   MPI_Allgather(result->l_count, nproc, MPI_INT, result->g_count, nproc,
 		MPI_INT, result->mpi_conf->comm);
+
+  MPI_Allreduce(result->l_bsbw, result->g_bsbw, result->conf->nb_shuffle,
+		MPI_DOUBLE, MPI_SUM, result->mpi_conf->comm);
 
   result->sum_time = 0.0;
   result->min_time = 1.0e15;
@@ -157,22 +165,62 @@ void hp2p_result_update(hp2p_result *result)
     result->stdd_bw = sqrt(result->stdd_bw / ((double)count));
     result->stdd_time = sqrt(result->stdd_time / ((double)count));
   }
+
+  // Bisection bandwidth
+  result->sum_bsbw = 0.0;
+  result->min_bsbw = 1.0e15;
+  result->max_bsbw = 0.0;
+  result->stdd_bsbw = 0.0;
+
+  for (i = 0; i < result->conf->nb_shuffle; i++)
+  {
+    result->g_bsbw[i] = result->g_bsbw[i] / 2.0;
+    result->sum_bsbw += result->g_bsbw[i];
+    if (result->g_bsbw[i] > result->max_bsbw)
+      result->max_bsbw = result->g_bsbw[i];
+    if (result->g_bsbw[i] < result->min_bsbw)
+      result->min_bsbw = result->g_bsbw[i];
+  }
+  result->avg_bsbw = result->sum_bsbw / result->conf->nb_shuffle;
+  for (i = 0; i < result->conf->nb_shuffle; i++)
+    result->stdd_bsbw += (result->g_bsbw[i] - result->avg_bsbw) *
+			 (result->g_bsbw[i] - result->avg_bsbw);
+
+  if (result->conf->nb_shuffle < 2)
+    result->stdd_bsbw = 0.0;
+  else
+    result->stdd_bsbw =
+	sqrt(result->stdd_bsbw / ((double)result->conf->nb_shuffle));
 }
 
 void hp2p_result_display(hp2p_result *result)
 {
   double m = 1048576.0;
+  int ncouples = result->mpi_conf->nproc / 2;
   printf("\n\n");
   printf(" === SUMMARY ===\n\n");
-  printf(" Min bandwidth : %0.2lf MB/s\n", result->min_bw / m);
-  printf(" Max bandwidth : %0.2lf MB/s\n", result->max_bw / m);
-  printf(" Avg bandwidth : %0.2lf MB/s\n", result->avg_bw / m);
-  printf(" Std bandwidth : %0.2lf MB/s\n", result->stdd_bw / m);
+  printf(" Min bandwidth            : %0.2lf MB/s\n", result->min_bw / m);
+  printf(" Max bandwidth            : %0.2lf MB/s\n", result->max_bw / m);
+  printf(" Avg bandwidth            : %0.2lf MB/s\n", result->avg_bw / m);
+  printf(" Std bandwidth            : %0.2lf MB/s\n", result->stdd_bw / m);
   printf("\n");
-  printf(" Min latency   : %0.2lf us\n", result->min_time * 1000000);
-  printf(" Max latency   : %0.2lf us\n", result->max_time * 1000000);
-  printf(" Avg latency   : %0.2lf us\n", result->avg_time * 1000000);
-  printf(" Std latency   : %0.2lf us\n", result->stdd_time * 1000000);
+  printf(" Min latency              : %0.2lf us\n", result->min_time * 1000000);
+  printf(" Max latency              : %0.2lf us\n", result->max_time * 1000000);
+  printf(" Avg latency              : %0.2lf us\n", result->avg_time * 1000000);
+  printf(" Std latency              : %0.2lf us\n",
+	 result->stdd_time * 1000000);
+  printf("\n");
+  printf(" Min bisection bandwidth  : %0.2lf MB/s\n", result->min_bsbw / m);
+  printf(" Max bisection bandwidth  : %0.2lf MB/s\n", result->max_bsbw / m);
+  printf(" Avg bisection bandwidth  : %0.2lf MB/s\n", result->avg_bsbw / m);
+  printf(" Std bisection bandwidth  : %0.2lf MB/s\n", result->stdd_bsbw / m);
+  printf("\n");
+  printf(" Min bisection efficiency : %0.2lf %%\n",
+	 100.0 * result->min_bsbw / (ncouples * result->min_bw));
+  printf(" Max bisection efficiency : %0.2lf %%\n",
+	 100.0 * result->max_bsbw / (ncouples * result->max_bw));
+  printf(" Avg bisection efficiency : %0.2lf %%\n",
+	 100.0 * result->avg_bsbw / (ncouples * result->avg_bw));
   printf("\n");
   printf(" ===============\n\n");
 }

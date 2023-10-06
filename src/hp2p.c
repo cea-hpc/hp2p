@@ -194,7 +194,7 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
   // Benchmark parameters
   nloops = conf.nb_shuffle;
   msg_size = conf.msg_size;
-  hp2p_result_alloc(&result, &mpi_conf, msg_size, conf.nb_msg);
+  hp2p_result_alloc(&result, &mpi_conf, &conf);
   hp2p_util_init_tremain(&conf);
   // Initialize random generator
   if (conf.seed < 0)
@@ -236,6 +236,7 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
       start = MPI_Wtime();
     }
     local_time = hp2p_iteration(mpi_conf, conf, other);
+    result.l_bsbw[i - 1] = msg_size / local_time;
     result.l_time[other] += local_time;
     if (((conf.time_mult < 1.) && (conf.local_max_time > 0.0) &&
 	 (conf.local_max_time < local_time)) ||
