@@ -272,7 +272,7 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
       printf(" %d %% done\n", (int)(100 * ((double)i) / ((double)nloops)));
     }
 #ifdef _HP2P_SIGNAL
-    check_signal(result, conf, mpi_conf, rank, root);
+    check_signal(result, conf, mpi_conf);
 #endif
     // output time of each iteration
   }
@@ -284,7 +284,7 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
     hp2p_result_display(&result);
     printf(" Writing final result...\n");
     fflush(stdout);
-    hp2p_result_write(result, conf, mpi_conf);
+    hp2p_result_write(result);
     printf(" Writing final result... Done\n");
     fflush(stdout);
   }

@@ -24,9 +24,10 @@ void init_signal_writer(hp2p_config conf)
   tokill = 0;
   towrite = 0;
 }
-void check_signal(hp2p_result result, hp2p_config conf,
-		  hp2p_mpi_config mpi_conf, int rank, int root)
+void check_signal(hp2p_result result)
 {
+  int rank = result.mpi_conf->rank;
+  int root = result.mpi_conf->root;
   MPI_Allreduce(MPI_IN_PLACE, &towrite, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
   if (towrite == 1)
   {
@@ -36,7 +37,7 @@ void check_signal(hp2p_result result, hp2p_config conf,
     {
       hp2p_result_display(&result);
       printf("Writing result...\n");
-      hp2p_result_write(result, conf, mpi_conf);
+      hp2p_result_write(result);
     }
     if (tokill != 0)
     {
@@ -44,10 +45,10 @@ void check_signal(hp2p_result result, hp2p_config conf,
 	printf("received signal %d exiting\n", tokill);
       exit(tokill);
     }
-    if (conf.alarm != 0.)
+    if (result.conf->alarm != 0.)
     {
       alarm(0);
-      alarm(conf.alarm);
+      alarm(result.conf->alarm);
     }
     towrite = 0;
   }
