@@ -1,3 +1,24 @@
+// Copyright (C) 2010-2023 CEA/DAM
+// Copyright (C) 2010-2023 Laurent Nguyen <laurent.nguyen@cea.fr>
+//
+// This file is part of HP2P.
+//
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use,
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info".
+
+/**
+ * \file      hp2p_signal.c
+ * \author    Vincent Ducrot <vincent.ducrot.tgcc@cea.fr>
+ * \version   4.0
+ * \date      September 22 2022
+ * \brief     HP2P Benchmark
+ *
+ * \details   No
+ */
+
 int towrite = 0;
 int tokill = 0;
 #include <hp2p.h>
