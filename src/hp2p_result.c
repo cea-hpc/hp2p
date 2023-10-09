@@ -77,7 +77,7 @@ void hp2p_result_update(hp2p_result *result)
   MPI_Allgather(result->l_count, nproc, MPI_INT, result->g_count, nproc,
 		MPI_INT, result->mpi_conf->comm);
 
-  MPI_Allreduce(result->l_bsbw, result->g_bsbw, result->conf->nb_shuffle,
+  MPI_Allreduce(result->l_bsbw, result->g_bsbw, result->current_iteration,
 		MPI_DOUBLE, MPI_SUM, result->mpi_conf->comm);
 
   result->sum_time = 0.0;
@@ -172,7 +172,7 @@ void hp2p_result_update(hp2p_result *result)
   result->max_bsbw = 0.0;
   result->stdd_bsbw = 0.0;
 
-  for (i = 0; i < result->conf->nb_shuffle; i++)
+  for (i = 0; i < result->current_iteration; i++)
   {
     result->g_bsbw[i] = result->g_bsbw[i] / 2.0;
     result->sum_bsbw += result->g_bsbw[i];
@@ -181,16 +181,16 @@ void hp2p_result_update(hp2p_result *result)
     if (result->g_bsbw[i] < result->min_bsbw)
       result->min_bsbw = result->g_bsbw[i];
   }
-  result->avg_bsbw = result->sum_bsbw / result->conf->nb_shuffle;
-  for (i = 0; i < result->conf->nb_shuffle; i++)
+  result->avg_bsbw = result->sum_bsbw / (result->current_iteration + 1);
+  for (i = 0; i < result->current_iteration; i++)
     result->stdd_bsbw += (result->g_bsbw[i] - result->avg_bsbw) *
 			 (result->g_bsbw[i] - result->avg_bsbw);
 
-  if (result->conf->nb_shuffle < 2)
+  if (result->current_iteration < 1)
     result->stdd_bsbw = 0.0;
   else
     result->stdd_bsbw =
-	sqrt(result->stdd_bsbw / ((double)result->conf->nb_shuffle));
+	sqrt(result->stdd_bsbw / ((double)result->current_iteration + 1));
 }
 
 void hp2p_result_display(hp2p_result *result)
@@ -199,6 +199,7 @@ void hp2p_result_display(hp2p_result *result)
   int ncouples = result->mpi_conf->nproc / 2;
   printf("\n\n");
   printf(" === SUMMARY ===\n\n");
+  printf(" Number of iteration      : %d \n\n", result->current_iteration);
   printf(" Min bandwidth            : %0.2lf MB/s\n", result->min_bw / m);
   printf(" Max bandwidth            : %0.2lf MB/s\n", result->max_bw / m);
   printf(" Avg bandwidth            : %0.2lf MB/s\n", result->avg_bw / m);
@@ -285,7 +286,8 @@ void hp2p_result_write_binary(hp2p_result result)
   {
     nproc = result.mpi_conf->nproc;
     fwrite(&nproc, sizeof(int), 1, fp);
-    fwrite(result.mpi_conf->hostlist, sizeof(char), nproc * MPI_MAX_PROCESSOR_NAME, fp);
+    fwrite(result.mpi_conf->hostlist, sizeof(char),
+	   nproc * MPI_MAX_PROCESSOR_NAME, fp);
     fwrite(result.g_bw, sizeof(double), nproc * nproc, fp);
     fwrite(result.g_time, sizeof(double), nproc * nproc, fp);
     fwrite(result.g_count, sizeof(int), nproc * nproc, fp);
@@ -423,7 +425,7 @@ void hp2p_result_write_html(hp2p_result result)
     fprintf(fp, "<div class=stats-container>\n");
     fprintf(fp, "<div>\n");
     fprintf(fp, "<h2>Details</h2>\n");
-    fprintf(fp, "Number of iterations: %d<br>\n", result.conf->nb_shuffle);
+    fprintf(fp, "Number of iterations: %d<br>\n", result.current_iteration);
     fprintf(fp, "Message size: %d bytes<br>\n", result.conf->msg_size);
     fprintf(fp, "Number of messages per communication: %d<br>\n",
 	    result.conf->nb_msg);

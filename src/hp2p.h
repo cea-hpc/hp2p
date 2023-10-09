@@ -131,6 +131,8 @@ typedef struct
   double max_bsbw;
   double stdd_bsbw;
 
+  int current_iteration;
+
   hp2p_mpi_config *mpi_conf;
   hp2p_config *conf;
 } hp2p_result;

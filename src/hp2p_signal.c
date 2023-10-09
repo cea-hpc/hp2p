@@ -38,6 +38,7 @@ void check_signal(hp2p_result result)
       hp2p_result_display(&result);
       printf("Writing result...\n");
       hp2p_result_write(result);
+      fflush(stdout);
     }
     if (tokill != 0)
     {

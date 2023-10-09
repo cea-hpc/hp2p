@@ -217,7 +217,7 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
   // Main loop
   for (i = 1; i <= nloops && tremain >= 0; i++)
   {
-
+    result.current_iteration = i;
     other = -1;
     // Check time left before job ends
     tremain = hp2p_util_tremain(conf);
@@ -263,6 +263,7 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
       if (rank == root)
       {
 	hp2p_result_display(&result);
+	hp2p_result_write(result);
       }
       MPI_Barrier(comm);
     }
@@ -272,7 +273,7 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
       printf(" %d %% done\n", (int)(100 * ((double)i) / ((double)nloops)));
     }
 #ifdef _HP2P_SIGNAL
-    check_signal(result, conf, mpi_conf);
+    check_signal(result);
 #endif
     // output time of each iteration
   }
