@@ -133,6 +133,10 @@ typedef struct
 
   int current_iteration;
 
+  double *monitor_build_couples;
+  double *monitor_heavyp2p;
+  double *monitor_snapshot;
+
   hp2p_mpi_config *mpi_conf;
   hp2p_config *conf;
 } hp2p_result;

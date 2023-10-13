@@ -175,9 +175,6 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
   double tremain = 1.e6;
   // Timers
   double start = 0.0;
-  double time_build_couples = 0.0;
-  double time_heavyp2p = 0.0;
-  double time_control = 0.0;
   double local_time = 0.;
   double max_time = 0.;
 
@@ -222,19 +219,16 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
     // Check time left before job ends
     tremain = hp2p_util_tremain(conf);
     // Build random couples
+    start = MPI_Wtime();
     if (rank == root)
     {
-      start = MPI_Wtime();
       hp2p_algo_build_couples(couples, nproc, conf.build);
     }
     MPI_Scatter(couples, 1, MPI_INT, &other, 1, MPI_INT, root, comm);
-    if (rank == root)
-      time_build_couples = MPI_Wtime() - start;
+    result.monitor_build_couples[i - 1] = MPI_Wtime() - start;
+
     // HP2P iteration
-    if (rank == root)
-    {
-      start = MPI_Wtime();
-    }
+    start = MPI_Wtime();
     local_time = hp2p_iteration(mpi_conf, conf, other);
     result.l_bsbw[i - 1] = msg_size / local_time;
     result.l_time[other] += local_time;
@@ -251,12 +245,10 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
     }
     if (other != rank)
       result.l_count[other]++;
-    if (rank == root)
-    {
-      time_heavyp2p = MPI_Wtime() - start;
-      start = MPI_Wtime();
-    }
+    result.monitor_heavyp2p[i - 1] = MPI_Wtime() - start;
+
     // Periodic snapshot
+    start = MPI_Wtime();
     if (i && ((i % conf.snap_freq) == 0))
     {
       hp2p_result_update(&result);
@@ -267,6 +259,7 @@ void hp2p_main(hp2p_config conf, hp2p_mpi_config mpi_conf)
       }
       MPI_Barrier(comm);
     }
+    result.monitor_snapshot[i - 1] = MPI_Wtime() - start;
     // Follow the run
     if (nloops >= 100 && rank == root && ((i % (nloops / 100)) == 0))
     {

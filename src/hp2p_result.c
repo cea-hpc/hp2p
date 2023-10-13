@@ -46,6 +46,11 @@ void hp2p_result_alloc(hp2p_result *result, hp2p_mpi_config *mpi_conf,
   }
   result->l_bsbw = (double *)calloc(conf->nb_shuffle, sizeof(double));
   result->g_bsbw = (double *)calloc(conf->nb_shuffle, sizeof(double));
+
+  result->monitor_build_couples =
+      (double *)calloc(conf->nb_shuffle, sizeof(double));
+  result->monitor_heavyp2p = (double *)calloc(conf->nb_shuffle, sizeof(double));
+  result->monitor_snapshot = (double *)calloc(conf->nb_shuffle, sizeof(double));
 }
 
 void hp2p_result_free(hp2p_result *result)
@@ -57,6 +62,9 @@ void hp2p_result_free(hp2p_result *result)
   free(result->g_bw);
   free(result->l_bsbw);
   free(result->g_bsbw);
+  free(result->monitor_build_couples);
+  free(result->monitor_heavyp2p);
+  free(result->monitor_snapshot);
 }
 
 void hp2p_result_update(hp2p_result *result)
