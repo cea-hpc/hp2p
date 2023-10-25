@@ -716,7 +716,7 @@ void hp2p_result_write_monitoring_html(hp2p_result result)
     fprintf(fp, "var monitor_build_couples = \n[");
     for (i = 0; i < result.current_iteration; i++)
     {
-      fprintf(fp, " %3.e,", result.monitor_build_couples[i]);
+      fprintf(fp, " %.3e,", result.monitor_build_couples[i]);
     }
     fprintf(fp, "    ]\n;\n");
     fprintf(fp, "// build couples end\n");
@@ -724,7 +724,7 @@ void hp2p_result_write_monitoring_html(hp2p_result result)
     fprintf(fp, "var monitor_heavyp2p = \n[");
     for (i = 0; i < result.current_iteration; i++)
     {
-      fprintf(fp, " %3.e,", result.monitor_heavyp2p[i]);
+      fprintf(fp, " %.3e,", result.monitor_heavyp2p[i]);
     }
     fprintf(fp, "    ]\n;\n");
     fprintf(fp, "// heavyp2p end\n");
@@ -732,7 +732,7 @@ void hp2p_result_write_monitoring_html(hp2p_result result)
     fprintf(fp, "var monitor_snapshot = \n[");
     for (i = 0; i < result.current_iteration; i++)
     {
-      fprintf(fp, " %3.e,", result.monitor_snapshot[i]);
+      fprintf(fp, " %.3e,", result.monitor_snapshot[i]);
     }
     fprintf(fp, "    ]\n;\n");
     fprintf(fp, "// snapshot end\n");
