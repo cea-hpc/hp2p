@@ -355,6 +355,7 @@ void hp2p_result_write_html_css(FILE *fp)
     fprintf(fp, "      text-align: center;\n");
     fprintf(fp, "      line-height: 20px;\n");
     fprintf(fp, "      font-size: 15px;\n");
+    fprintf(fp, "      font-family: 'Open Sans', sans-serif;\n");
     fprintf(fp, "    }\n");
     fprintf(fp, "    .flex-container {\n");
     fprintf(fp, "      padding: 0;\n");
