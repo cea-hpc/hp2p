@@ -46,6 +46,11 @@ void hp2p_result_alloc(hp2p_result *result, hp2p_mpi_config *mpi_conf,
   }
   result->l_bsbw = (double *)calloc(conf->nb_shuffle, sizeof(double));
   result->g_bsbw = (double *)calloc(conf->nb_shuffle, sizeof(double));
+
+  result->monitor_build_couples =
+      (double *)calloc(conf->nb_shuffle, sizeof(double));
+  result->monitor_heavyp2p = (double *)calloc(conf->nb_shuffle, sizeof(double));
+  result->monitor_snapshot = (double *)calloc(conf->nb_shuffle, sizeof(double));
 }
 
 void hp2p_result_free(hp2p_result *result)
@@ -57,6 +62,9 @@ void hp2p_result_free(hp2p_result *result)
   free(result->g_bw);
   free(result->l_bsbw);
   free(result->g_bsbw);
+  free(result->monitor_build_couples);
+  free(result->monitor_heavyp2p);
+  free(result->monitor_snapshot);
 }
 
 void hp2p_result_update(hp2p_result *result)
@@ -253,15 +261,24 @@ void hp2p_result_display_bw(hp2p_result *result)
     printf("\n");
   }
 }
+
+void hp2p_result_write_html_get_time(char *date, char *hour)
+{
+  time_t now;
+  struct tm *ltm;
+
+  now = time(0);
+  ltm = localtime(&now);
+  sprintf(date, "%d/%d/%d", ltm->tm_mday, 1 + ltm->tm_mon, 1900 + ltm->tm_year);
+  sprintf(hour, "%d:%d:%d", ltm->tm_hour, ltm->tm_min, ltm->tm_sec);
+}
+
 void hp2p_result_write_binary(hp2p_result result)
 {
-
   FILE *fp = NULL;
   char *filename = NULL;
   char date[1024];
   char hour[1024];
-  time_t now;
-  struct tm *ltm;
   int i = 0;
   int j = 0;
   int nproc = 0;
@@ -269,10 +286,7 @@ void hp2p_result_write_binary(hp2p_result result)
   int pos = 0;
 
   nproc = result.mpi_conf->nproc;
-  now = time(0);
-  ltm = localtime(&now);
-  sprintf(date, "%d/%d/%d", ltm->tm_mday, 1 + ltm->tm_mon, 1900 + ltm->tm_year);
-  sprintf(hour, "%d:%d:%d", ltm->tm_hour, ltm->tm_min, ltm->tm_sec);
+  hp2p_result_write_html_get_time(date, hour);
   filename = (char *)malloc((strlen(result.conf->outname) + 16) * sizeof(char));
   strcpy(filename, result.conf->outname);
   strcat(filename, ".bin");
@@ -297,42 +311,10 @@ void hp2p_result_write_binary(hp2p_result result)
   hp2p_result_display_bw(&result);
 }
 
-void hp2p_result_write_html(hp2p_result result)
+void hp2p_result_write_html_css(FILE *fp)
 {
-
-  FILE *fp = NULL;
-  FILE *fplotly = NULL;
-  char *filename = NULL;
-  char date[1024];
-  char hour[1024];
-  time_t now;
-  struct tm *ltm;
-  int i = 0;
-  int j = 0;
-  int nproc = 0;
-  char ch = '\0';
-  int pos = 0;
-  double m = 1024.0 * 1024.0;
-
-  int nb_shuffle = result.conf->nb_shuffle;
-  nproc = result.mpi_conf->nproc;
-  now = time(0);
-  ltm = localtime(&now);
-  sprintf(date, "%d/%d/%d", ltm->tm_mday, 1 + ltm->tm_mon, 1900 + ltm->tm_year);
-  sprintf(hour, "%d:%d:%d", ltm->tm_hour, ltm->tm_min, ltm->tm_sec);
-  filename = (char *)malloc((strlen(result.conf->outname) + 16) * sizeof(char));
-  strcpy(filename, result.conf->outname);
-  strcat(filename, ".html");
-  fp = fopen(filename, "w");
   if (fp != NULL)
   {
-    fprintf(fp, "<!DOCTYPE html>\n");
-    fprintf(fp, "<html>\n");
-    fprintf(fp, "  <head>\n");
-    fprintf(fp, "    <meta charset=\"utf-8\" />\n");
-    fprintf(fp, "     <title>CEA-HPC - HP2P on %s - %s at %s</title>\n",
-	    &(result.mpi_conf->hostlist[0]), date, hour);
-    fprintf(fp, "  </head>\n");
     fprintf(fp, "  <style>\n");
     fprintf(fp, "\n");
     fprintf(fp, "    body {\n");
@@ -373,6 +355,7 @@ void hp2p_result_write_html(hp2p_result result)
     fprintf(fp, "      text-align: center;\n");
     fprintf(fp, "      line-height: 20px;\n");
     fprintf(fp, "      font-size: 15px;\n");
+    fprintf(fp, "      font-family: 'Open Sans', sans-serif;\n");
     fprintf(fp, "    }\n");
     fprintf(fp, "    .flex-container {\n");
     fprintf(fp, "      padding: 0;\n");
@@ -387,6 +370,17 @@ void hp2p_result_write_html(hp2p_result result)
     fprintf(fp, "      padding: 2px;\n");
     fprintf(fp, "    }\n");
     fprintf(fp, "</style>\n");
+  }
+}
+
+void hp2p_result_write_html_plotlyjs(FILE *fp, hp2p_result result)
+{
+  FILE *fplotly = NULL;
+  char ch = '\0';
+  int pos = 0;
+
+  if (fp != NULL)
+  {
     fprintf(fp, "<script type=\"text/javascript\">window.PlotlyConfig = "
 		"{MathJaxConfig: 'local'};</script>\n");
     if (strlen(result.conf->plotlyjs) > 0)
@@ -417,15 +411,74 @@ void hp2p_result_write_html(hp2p_result result)
 	      "<script "
 	      "src=\"https://cdn.plot.ly/plotly-%s.min.js\"></script>\n",
 	      PLOTLY_VERSION);
+  }
+}
+
+void hp2p_result_write_html_header(FILE *fp, hp2p_result result)
+{
+  char date[1024];
+  char hour[1024];
+
+  if (fp != NULL)
+  {
+    hp2p_result_write_html_get_time(date, hour);
+    fprintf(fp, "<!DOCTYPE html>\n");
+    fprintf(fp, "<html>\n");
+    fprintf(fp, "  <head>\n");
+    fprintf(fp, "    <meta charset=\"utf-8\" />\n");
+    fprintf(fp, "     <title>CEA-HPC - HP2P on %s - %s at %s</title>\n",
+	    &(result.mpi_conf->hostlist[0]), date, hour);
+    fprintf(fp, "  </head>\n");
+    hp2p_result_write_html_css(fp);
+    hp2p_result_write_html_plotlyjs(fp, result);
     fprintf(fp, "<body style=\"background-color:rgb(220, 220, 220);\">\n");
+    fflush(fp);
+  }
+}
+
+void hp2p_result_write_html_footer(FILE *fp)
+{
+  char date[1024];
+  char hour[1024];
+
+  if (fp != NULL)
+  {
+    hp2p_result_write_html_get_time(date, hour);
+    fprintf(fp, "<div class=stats-container>\n");
+    fprintf(fp, "<div>\n");
+    fprintf(fp,
+	    "This page was generated by CEA-HPC <a "
+	    "href=\"https://github.com/cea-hpc/hp2p\">HP2P</a> benchmark on %s "
+	    "at %s.\n",
+	    date, hour);
+    fprintf(fp, "</div>\n");
+    fprintf(fp, "</div>\n");
+
+    fprintf(fp, "</body>\n");
+    fprintf(fp, "</html>\n");
+    fprintf(fp, "\n");
+    fflush(fp);
+  }
+}
+
+void hp2p_result_write_html_default_stats(FILE *fp, hp2p_result result)
+{
+  // Convert bytes to Mb
+  double m = 1024.0 * 1024.0;
+
+  if (fp != NULL)
+  {
+    // Main title
     fprintf(fp, "<div class=\"banner\">\n");
     fprintf(fp, "<h2>HP2P results vizualisation</h2>\n");
     fprintf(fp, "</div>\n");
 
+    // Run configuration
     fprintf(fp, "<div class=stats-container>\n");
     fprintf(fp, "<div>\n");
     fprintf(fp, "<h2>Details</h2>\n");
-    fprintf(fp, "Number of iterations: %d<br>\n", result.current_iteration);
+    fprintf(fp, "Number of iterations: %d / %d<br>\n", result.current_iteration,
+	    result.conf->nb_shuffle);
     fprintf(fp, "Message size: %d bytes<br>\n", result.conf->msg_size);
     fprintf(fp, "Number of messages per communication: %d<br>\n",
 	    result.conf->nb_msg);
@@ -434,8 +487,8 @@ void hp2p_result_write_html(hp2p_result result)
     fprintf(fp, "</div>\n");
     fprintf(fp, "</div>\n");
 
+    // Bandwidth statistics
     fprintf(fp, "<div class=stats-container >\n");
-
     fprintf(fp, "<div>\n");
     fprintf(fp, "<h2>Bandwidth Statistics</h2>\n");
     fprintf(
@@ -452,6 +505,7 @@ void hp2p_result_write_html(hp2p_result result)
     fprintf(fp, "Standard deviation: %0.2lf MB/s<br>\n", result.stdd_bw / m);
     fprintf(fp, "</div>\n");
 
+    // Latency statistics
     fprintf(fp, "<div>\n");
     fprintf(fp, "<h2>Latency Statistics</h2>\n");
     fprintf(
@@ -472,6 +526,7 @@ void hp2p_result_write_html(hp2p_result result)
 	    result.stdd_time * 1.e6);
     fprintf(fp, "</div>\n");
 
+    // Bisection bandwidth
     fprintf(fp, "<div>\n");
     fprintf(fp, "<h2>Bisection bandwidth Statistics</h2>\n");
     fprintf(fp, "Minimum Bisection Bandwidth: %0.2lf MB/s<br>\n",
@@ -483,11 +538,34 @@ void hp2p_result_write_html(hp2p_result result)
     fprintf(fp, "</div>\n");
 
     fprintf(fp, "</div>\n");
+  }
+}
 
+int plotly_id = 1;
+int plotly_uid = 1;
+
+void hp2p_result_write_html(hp2p_result result)
+{
+  FILE *fp = NULL;
+  char *filename = NULL;
+  int i = 0;
+  int j = 0;
+  double m = 1024.0 * 1024.0;
+
+  filename = (char *)malloc((strlen(result.conf->outname) + 16) * sizeof(char));
+  strcpy(filename, result.conf->outname);
+  strcat(filename, ".html");
+  fp = fopen(filename, "w");
+  if (fp != NULL)
+  {
+    hp2p_result_write_html_header(fp, result);
+    hp2p_result_write_html_default_stats(fp, result);
+
+    // Data
     fprintf(fp, "<script type=\"text/javascript\">\n");
     fprintf(fp, "// hostlist start\n");
     fprintf(fp, "var hostlist = \n[");
-    for (i = 0; i < nproc; i++)
+    for (i = 0; i < result.mpi_conf->nproc; i++)
       fprintf(fp, "    \"%s\", ",
 	      &result.mpi_conf->hostlist[MPI_MAX_PROCESSOR_NAME * i]);
     fprintf(fp, "    ]\n;\n");
@@ -499,11 +577,12 @@ void hp2p_result_write_html(hp2p_result result)
     fprintf(fp, "// msg_size end\n");
     fprintf(fp, "// bandwidth start\n");
     fprintf(fp, "var bandwidth = \n[");
-    for (i = 0; i < nproc; i++)
+    for (i = 0; i < result.mpi_conf->nproc; i++)
     {
       fprintf(fp, "    [");
-      for (j = 0; j < nproc; j++)
-	fprintf(fp, " %0.3lf,", result.g_bw[i * nproc + j] / m);
+      for (j = 0; j < result.mpi_conf->nproc; j++)
+	fprintf(fp, " %0.2lf,",
+		result.g_bw[i * result.mpi_conf->nproc + j] / m);
       fprintf(fp, " ], ");
     }
     fprintf(fp, "    ]\n;\n");
@@ -512,26 +591,19 @@ void hp2p_result_write_html(hp2p_result result)
     fprintf(fp, "      for (const bw_line of bandwidth) {\n");
     fprintf(fp, "	var sum = bw_line.reduce((a, b) => a + b, 0);\n");
     fprintf(fp, "	bw_avg.push(sum/(bw_line.length-1));}\n");
-    fprintf(fp, "// bisection bandwidth start\n");
-    fprintf(fp, "var bisection_bandwidth = \n[");
-    for (i = 0; i < nb_shuffle; i++)
-    {
-      fprintf(fp, " %lf,", result.g_bsbw[i] / m);
-    }
-    fprintf(fp, "    ]\n;\n");
-    fprintf(fp, "// bisection bandwidth end\n");
     fprintf(fp, "</script>\n");
+
+    // Bandwidth heatmap
     fprintf(fp, "<div class=flex-container >\n");
-    fprintf(
-	fp,
-	"<div><div id=\"0565c6e2-a43b-4956-84fb-40d2e9ecd5ff\" style=\"height: "
-	"800px; width: 80%%;\" class=\"plotly-graph-div\"></div>\n");
+    fprintf(fp,
+	    "<div><div id=\"%d\" style=\"height: "
+	    "800px; width: 80%%;\" class=\"plotly-graph-div\"></div>\n",
+	    plotly_id);
     fprintf(fp, "  <script type=\"text/javascript\">\n");
     fprintf(fp, "    window.PLOTLYENV=window.PLOTLYENV || {};\n");
     fprintf(fp, "    window.PLOTLYENV.BASE_URL=\"https://plot.ly\";\n");
-    fprintf(fp,
-	    "    Plotly.newPlot(\"0565c6e2-a43b-4956-84fb-40d2e9ecd5ff\",\n");
-    fprintf(fp, "    [{\"uid\": \"6c733ff6-e3de-4cc9-ae93-e189fb397286\",\n");
+    fprintf(fp, "    Plotly.newPlot(\"%d\",\n", plotly_id++);
+    fprintf(fp, "    [{\"uid\": \"%d\",\n", plotly_uid++);
     fprintf(fp, "    \"colorscale\": \"Jet\",\n");
     fprintf(fp, "    \"y\": hostlist,\n");
     fprintf(fp, "    \"x\": hostlist,\n");
@@ -547,14 +619,17 @@ void hp2p_result_write_html(hp2p_result result)
     fprintf(fp, "\n  </script>\n\n");
     fprintf(fp, "</div>\n");
 
+    // Distribution bandwidth
     fprintf(fp, "<div class=flex-container >\n");
-    fprintf(fp, "<div><div id=\"1234\" style=\"height: 800px; width: 80%%;\" "
-		"class=\"plotly-graph-div\"></div>\n");
+    fprintf(fp,
+	    "<div><div id=\"%d\" style=\"height: 800px; width: 80%%;\" "
+	    "class=\"plotly-graph-div\"></div>\n",
+	    plotly_id);
     fprintf(fp, "  <script type=\"text/javascript\">\n");
     fprintf(fp, "    window.PLOTLYENV=window.PLOTLYENV || {};\n");
     fprintf(fp, "    window.PLOTLYENV.BASE_URL=\"https://plot.ly\";\n");
-    fprintf(fp, "    Plotly.newPlot(\"1234\",\n");
-    fprintf(fp, "    [{\"uid\": \"5678\",\n");
+    fprintf(fp, "    Plotly.newPlot(\"%d\",\n", plotly_id++);
+    fprintf(fp, "    [{\"uid\": \"%d\",\n", plotly_uid++);
     fprintf(fp, "    \"colorscale\": \"Jet\",\n");
     fprintf(fp,
 	    "    \"x\": [].concat(...bandwidth).filter(function(number){return "
@@ -572,15 +647,17 @@ void hp2p_result_write_html(hp2p_result result)
     fprintf(fp, "</div>\n");
     fprintf(fp, "\n");
 
-    fprintf(fp, "\n");
+    // Distribution of average bandwidth per node
     fprintf(fp, "<div class=flex-container >\n");
-    fprintf(fp, "<div><div id=\"12345\" style=\"height: 800px; width: 80%%;\" "
-		"class=\"plotly-graph-div\"></div>\n");
+    fprintf(fp,
+	    "<div><div id=\"%d\" style=\"height: 800px; width: 80%%;\" "
+	    "class=\"plotly-graph-div\"></div>\n",
+	    plotly_id);
     fprintf(fp, "  <script type=\"text/javascript\">\n");
     fprintf(fp, "    window.PLOTLYENV=window.PLOTLYENV || {};\n");
     fprintf(fp, "    window.PLOTLYENV.BASE_URL=\"https://plot.ly\";\n");
-    fprintf(fp, "    Plotly.newPlot(\"12345\",\n");
-    fprintf(fp, "    [{\"uid\": \"56789\",\n");
+    fprintf(fp, "    Plotly.newPlot(\"%d\",\n", plotly_id++);
+    fprintf(fp, "    [{\"uid\": \"%d\",\n", plotly_uid++);
     fprintf(fp, "    \"colorscale\": \"Jet\",\n");
     fprintf(fp, "    \"x\": bw_avg,\n");
     fprintf(fp, "    \"type\": \"histogram\"}],\n");
@@ -595,17 +672,155 @@ void hp2p_result_write_html(hp2p_result result)
     fprintf(fp, "  </script>\n");
     fprintf(fp, "</div>\n");
     fprintf(fp, "\n");
-    fprintf(fp, "</div>\n");
 
+    fprintf(fp, "</div>\n");
+    fprintf(fp, "</div>\n");
+    hp2p_result_write_html_footer(fp);
+    fclose(fp);
+  }
+  free(filename);
+}
+
+void hp2p_result_write_monitoring_html(hp2p_result result)
+{
+  FILE *fp = NULL;
+  char *filename = NULL;
+  int i = 0;
+  int j = 0;
+  double m = 1024.0 * 1024.0;
+  filename = (char *)malloc((strlen(result.conf->outname) + 32) * sizeof(char));
+  strcpy(filename, result.conf->outname);
+  strcat(filename, "-monitoring.html");
+  fp = fopen(filename, "w");
+  if (fp != NULL)
+  {
+    hp2p_result_write_html_header(fp, result);
+    hp2p_result_write_html_default_stats(fp, result);
+
+    // Data
+    fprintf(fp, "<script type=\"text/javascript\">\n");
+    fprintf(fp, "// msg_size start\n");
+    fprintf(fp, "var msg_size = \n");
+    fprintf(fp, "    %d\n", result.conf->msg_size);
+    fprintf(fp, "    ;\n");
+    fprintf(fp, "// msg_size end\n");
+    fprintf(fp, "// bisection bandwidth start\n");
+    fprintf(fp, "var bisection_bandwidth = \n[");
+    for (i = 0; i < result.current_iteration; i++)
+    {
+      fprintf(fp, " %0.2lf,", result.g_bsbw[i] / m);
+    }
+    fprintf(fp, "    ]\n;\n");
+    fprintf(fp, "// bisection bandwidth end\n");
+    fprintf(fp, "// build couples start\n");
+    fprintf(fp, "var monitor_build_couples = \n[");
+    for (i = 0; i < result.current_iteration; i++)
+    {
+      fprintf(fp, " %3.e,", result.monitor_build_couples[i]);
+    }
+    fprintf(fp, "    ]\n;\n");
+    fprintf(fp, "// build couples end\n");
+    fprintf(fp, "// heavyp2p start\n");
+    fprintf(fp, "var monitor_heavyp2p = \n[");
+    for (i = 0; i < result.current_iteration; i++)
+    {
+      fprintf(fp, " %3.e,", result.monitor_heavyp2p[i]);
+    }
+    fprintf(fp, "    ]\n;\n");
+    fprintf(fp, "// heavyp2p end\n");
+    fprintf(fp, "// snapshot start\n");
+    fprintf(fp, "var monitor_snapshot = \n[");
+    for (i = 0; i < result.current_iteration; i++)
+    {
+      fprintf(fp, " %3.e,", result.monitor_snapshot[i]);
+    }
+    fprintf(fp, "    ]\n;\n");
+    fprintf(fp, "// snapshot end\n");
+    fprintf(fp, "</script>\n");
     fprintf(fp, "\n");
+
+    // Monitoring scatter
     fprintf(fp, "<div class=flex-container >\n");
-    fprintf(fp, "<div><div id=\"123456\" style=\"height: 800px; width: 80%%;\" "
-		"class=\"plotly-graph-div\"></div>\n");
+    fprintf(fp,
+	    "<div><div id=\"%d\" style=\"height: 800px; width: 80%%;\" "
+	    "class=\"plotly-graph-div\"></div>\n",
+	    plotly_id);
     fprintf(fp, "  <script type=\"text/javascript\">\n");
     fprintf(fp, "    window.PLOTLYENV=window.PLOTLYENV || {};\n");
     fprintf(fp, "    window.PLOTLYENV.BASE_URL=\"https://plot.ly\";\n");
-    fprintf(fp, "    Plotly.newPlot(\"123456\",\n");
-    fprintf(fp, "    [{\"uid\": \"5678910\",\n");
+    fprintf(fp, "    Plotly.newPlot(\"%d\", [ \n", plotly_id++);
+    fprintf(fp, "      {\"uid\": \"%d\",\n", plotly_uid++);
+    fprintf(fp, "       \"name\": \"Comm\",\n");
+    fprintf(fp, "       \"mode\": \"lines\",\n");
+    fprintf(fp, "       \"marker\": { \"color\": \"green\" },\n");
+    fprintf(fp, "       \"y\": monitor_heavyp2p,\n");
+    fprintf(fp, "       \"type\": \"scatter\"},");
+    fprintf(fp, "      {\"uid\": \"%d\",\n", plotly_uid++);
+    fprintf(fp, "       \"name\": \"Draw\",\n");
+    fprintf(fp, "       \"mode\": \"lines\",\n");
+    fprintf(fp, "       \"marker\": { \"color\": \"blue\" },\n");
+    fprintf(fp, "       \"y\": monitor_build_couples,\n");
+    fprintf(fp, "       \"type\": \"scatter\"},");
+    fprintf(fp, "      {\"uid\": \"%d\",\n", plotly_uid++);
+    fprintf(fp, "       \"name\": \"Snapshot\",\n");
+    fprintf(fp, "       \"mode\": \"lines\",\n");
+    fprintf(fp, "       \"marker\": { \"color\": \"orange\" },\n");
+    fprintf(fp, "       \"y\": monitor_snapshot,\n");
+    fprintf(fp, "       \"type\": \"scatter\"},");
+    fprintf(fp, "\n    ],\n");
+    fprintf(
+	fp,
+	"    {\"height\": 800, \"width\": 1600, \"autosize\": true, \"title\": "
+	"{\"text\": \"Time of iterations\"}, "
+	"\"yaxis\": {\"title\": \"Time (s)\"}, \"xaxis\": {\"title\": "
+	"\"Iteration\"} }, {\"plotlyServerURL\": "
+	"\"https://plot.ly\", "
+	"\"linkText\": \"Export to plot.ly\", \"showLink\": false}\n");
+    fprintf(fp, "    )\n");
+    fprintf(fp, "  </script>\n");
+    fprintf(fp, "</div>\n");
+    fprintf(fp, "\n");
+
+    // Bisection bandwidth scatter
+    fprintf(fp, "<div class=flex-container >\n");
+    fprintf(fp,
+	    "<div><div id=\"%d\" style=\"height: 800px; width: 80%%;\" "
+	    "class=\"plotly-graph-div\"></div>\n",
+	    plotly_id);
+    fprintf(fp, "  <script type=\"text/javascript\">\n");
+    fprintf(fp, "    window.PLOTLYENV=window.PLOTLYENV || {};\n");
+    fprintf(fp, "    window.PLOTLYENV.BASE_URL=\"https://plot.ly\";\n");
+    fprintf(fp, "    Plotly.newPlot(\"%d\",\n", plotly_id++);
+    fprintf(fp, "    [{\"uid\": \"%d\",\n", plotly_uid++);
+    fprintf(fp, "    \"name\": \"\",\n");
+    fprintf(fp, "    \"mode\": \"markers\",\n");
+    fprintf(fp, "    \"marker\": { \"color\": \"red\" },\n");
+    fprintf(fp, "    \"y\": bisection_bandwidth,\n");
+    fprintf(fp, "    \"type\": \"scatter\"}],\n");
+    fprintf(
+	fp,
+	"    {\"height\": 800, \"width\": 800, \"autosize\": true, \"title\": "
+	"{\"text\": \"Bisection bandwidth (MB/s)\"}, "
+	"\"yaxis\": {\"title\": \"Bandwidth (MB/s)\"}, \"xaxis\": {\"title\": "
+	"\"Iteration\"} }, {\"plotlyServerURL\": "
+	"\"https://plot.ly\", "
+	"\"linkText\": \"Export to plot.ly\", \"showLink\": false}\n");
+    fprintf(fp, "    )\n");
+    fprintf(fp, "  </script>\n");
+    fprintf(fp, "</div>\n");
+    fprintf(fp, "\n");
+
+    // Bisection bandwidth boxplot
+    fprintf(fp, "<div class=flex-container >\n");
+    fprintf(fp,
+	    "<div><div id=\"%d\" style=\"height: 800px; width: 80%%;\" "
+	    "class=\"plotly-graph-div\"></div>\n",
+	    plotly_id);
+    fprintf(fp, "  <script type=\"text/javascript\">\n");
+    fprintf(fp, "    window.PLOTLYENV=window.PLOTLYENV || {};\n");
+    fprintf(fp, "    window.PLOTLYENV.BASE_URL=\"https://plot.ly\";\n");
+    fprintf(fp, "    Plotly.newPlot(\"%d\",\n", plotly_id++);
+    fprintf(fp, "    [{\"uid\": \"%d\",\n", plotly_uid++);
     fprintf(fp, "    \"name\": \"\",\n");
     fprintf(fp, "    \"boxmean\": \"sd\",\n");
     fprintf(fp, "    \"y\": bisection_bandwidth,\n");
@@ -621,31 +836,21 @@ void hp2p_result_write_html(hp2p_result result)
     fprintf(fp, "  </script>\n");
     fprintf(fp, "</div>\n");
     fprintf(fp, "\n");
-    fprintf(fp, "</div>\n");
 
-    fprintf(fp, "<div class=stats-container>\n");
-    fprintf(fp, "<div>\n");
-    fprintf(fp,
-	    "This page was generated by CEA-HPC <a "
-	    "href=\"https://github.com/cea-hpc/hp2p\">HP2P</a> benchmark on %s "
-	    "at %s.\n",
-	    date, hour);
     fprintf(fp, "</div>\n");
-    fprintf(fp, "</div>\n");
-
-    fprintf(fp, "</body>\n");
-    fprintf(fp, "</html>\n");
-    fprintf(fp, "\n");
-
-    fflush(fp);
+    hp2p_result_write_html_footer(fp);
     fclose(fp);
   }
   free(filename);
 }
+
 void hp2p_result_write(hp2p_result result)
 {
   if (!strcmp(result.conf->output_mode, "bin"))
     hp2p_result_write_binary(result);
   else
+  {
     hp2p_result_write_html(result);
+    hp2p_result_write_monitoring_html(result);
+  }
 }
