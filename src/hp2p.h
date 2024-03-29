@@ -86,6 +86,7 @@ typedef struct
   int rank;
   int local_rank;
   int nproc;
+  int local_nproc;
   MPI_Comm comm;
   MPI_Comm local_comm;
   char localhost[MPI_MAX_PROCESSOR_NAME];

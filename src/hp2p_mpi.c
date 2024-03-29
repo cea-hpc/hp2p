@@ -31,25 +31,27 @@ int hp2p_mpi_init(int *argc, char ***argv, hp2p_mpi_config *mpi_conf)
   MPI_Comm_size(mpi_conf->comm, &mpi_conf->nproc);
   MPI_Comm_rank(mpi_conf->comm, &mpi_conf->rank);
 
-#ifdef _ENABLE_CUDA_
   MPI_Comm_split_type(mpi_conf->comm, MPI_COMM_TYPE_SHARED, mpi_conf->rank,
 		      MPI_INFO_NULL, &mpi_conf->local_comm);
   MPI_Comm_rank(mpi_conf->local_comm, &mpi_conf->local_rank);
+  MPI_Comm_size(mpi_conf->local_comm, &mpi_conf->local_nproc);
+
+#ifdef _ENABLE_CUDA_
   cudaSetDevice(mpi_conf->local_rank);
 #endif
 #ifdef _ENABLE_ROCM_
-  MPI_Comm_split_type(mpi_conf->comm, MPI_COMM_TYPE_SHARED, mpi_conf->rank,
-		      MPI_INFO_NULL, &mpi_conf->local_comm);
-  MPI_Comm_rank(mpi_conf->local_comm, &mpi_conf->local_rank);
   hipSetDevice(mpi_conf->local_rank);
 #endif
 
   mpi_conf->root = 0;
   MPI_Get_processor_name(mpi_conf->localhost, &namelen);
-#if defined(_ENABLE_CUDA_) || defined(_ENABLE_ROCM_)
-  sprintf(mpi_conf->localhost, "%s:%d", mpi_conf->localhost,
-	  mpi_conf->local_rank);
-#endif
+  if (mpi_conf->local_nproc > 1)
+  {
+    char tmpstr[64] = "";
+    sprintf(tmpstr, ":%d", mpi_conf->local_rank);
+    strncat(mpi_conf->localhost, tmpstr, 64);
+  }
+
   mpi_conf->hostlist =
       malloc(mpi_conf->nproc * MPI_MAX_PROCESSOR_NAME * sizeof(char));
   MPI_Allgather(mpi_conf->localhost, MPI_MAX_PROCESSOR_NAME, MPI_CHAR,
