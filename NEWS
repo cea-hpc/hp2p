@@ -1,3 +1,16 @@
+* Changes in hp2p-4.1 - 29/03/2024
+=====================
+
+   -- Return unique identifier if multiples MPI processes are on same node
+   -- HIP version to test bandwidth between AMD GPU
+   -- Correction of standard deviation formula
+   -- Expose data in HTML file
+   -- Generate PNG static file
+   -- Update examples
+   -- Feature to choose and fix seed for random generator for random algorithm
+   -- Add script to help format files
+   -- Add bisection bandwidth reporting
+   
 * Changes in hp2p-4.0 - 08/06/2022
 =====================
 

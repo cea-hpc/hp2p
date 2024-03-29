@@ -153,7 +153,7 @@ Laurent Nguyen - <laurent.nguyen@cea.fr>
 
 ## License
 
-Copyright 2010-2023 CEA/DAM/DIF<br />
+Copyright 2010-2024 CEA/DAM/DIF<br />
 <br />
 HP2P is distributed under the CeCILL-C. See the included files <br />
 Licence_CeCILL-C_V1-en.txt (English version) and <br />
