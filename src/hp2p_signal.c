@@ -30,14 +30,13 @@ void signal_handle(int sig)
   else
     tokill = 0;
   towrite = 1;
-  signal(sig, signal_handle);
 }
 void init_signal_writer(hp2p_config conf)
 {
   signal(SIGALRM, signal_handle);
   signal(SIGUSR1, signal_handle);
   signal(SIGTERM, signal_handle);
-  if (conf.alarm != 0.)
+  if (conf.alarm != 0)
   {
     alarm(0);
     alarm(conf.alarm);
@@ -67,7 +66,7 @@ void check_signal(hp2p_result result)
 	printf("received signal %d exiting\n", tokill);
       exit(tokill);
     }
-    if (result.conf->alarm != 0.)
+    if (result.conf->alarm != 0)
     {
       alarm(0);
       alarm(result.conf->alarm);
