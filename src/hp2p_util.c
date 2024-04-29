@@ -96,6 +96,7 @@ void hp2p_util_display_config(hp2p_config conf)
   printf(" Max time                    : %d\n", conf.max_time);
   printf(" Build couple algorithm      : %s\n", conf.buildname);
   printf(" Seed                        : %d\n", conf.seed);
+  printf(" Alarm                       : %d\n", conf.alarm);
   printf(" Output file                 : %s\n", conf.outname);
   printf(" Anonymize hostname          : %d\n", conf.anonymize);
   printf(" Plotly.js file              : %s\n", conf.plotlyjs);
@@ -142,6 +143,8 @@ void hp2p_util_display_help(char command[])
   printf(
       "   -r seed            Seed for initializing random number generators\n");
   printf("                      (default = 0, using time = -1)\n");
+  printf(
+       "   -A alarm           Periode in secondes between two result writes\n");
   printf("   -y anon            1 = hide hostname, 0 = write hostname "
 	 "(default)\n");
   printf("   -p jsfile          Path to a plotly.min.js file to include into "
@@ -207,6 +210,8 @@ void hp2p_util_read_configfile(hp2p_config *conf)
 	  conf->nb_msg = atoi(value);
 	if (strcmp(key, "align") == 0)
 	  conf->align_size = atoi(value);
+	if (strcmp(key, "alarm") == 0)
+	  conf->alarm = atoi(value);
 	if (strcmp(key, "outname") == 0)
 	  strcpy(conf->outname, value);
 	if (strcmp(key, "build") == 0)
@@ -254,7 +259,7 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
   hp2p_util_set_default_config(conf);
 
   // Parsing command line
-  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:r:t:a:y:p:f:M:X:")) != -1)
+  while ((opt = getopt(argc, argv, "hn:k:m:s:o:i:c:r:t:a:y:p:f:M:X:A:")) != -1)
   {
     switch (opt)
     {
@@ -310,6 +315,9 @@ void hp2p_util_read_commandline(int argc, char *argv[], hp2p_config *conf)
       break;
     case 'X':
       conf->time_mult = strtod(optarg, NULL);
+    case 'A':
+      conf->alarm = atoi(optarg);
+      break;
     default:
       break;
     }
