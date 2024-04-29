@@ -46,6 +46,7 @@ void hp2p_util_set_default_config(hp2p_config *conf)
   conf->build = 0;	  // Random
   conf->buildname = hp2p_algo_get_name(conf->build);
   conf->seed = 0;
+  conf->alarm = 0;
   conf->__start_time = 0.0;
   conf->align_size = 8;
   conf->anonymize = 0;
