@@ -21,7 +21,7 @@
 
 #include "hp2p.h"
 
-char *hp2p_algo_name[] = {"RANDOM", "SHIFT", NULL};
+char *hp2p_algo_name[] = {"RANDOM", "SHIFT", "BISECTION", NULL};
 
 /**
  * \fn     void hp2p_algo_get_num
@@ -73,13 +73,17 @@ void hp2p_algo_build_couples(int *v, int size, int algo)
 {
   static int init = 0;
   // Generate random couples
-  if (algo == 0)
+  if (algo == 1)
   {
-    hp2p_algo_random(v, size);
+    hp2p_algo_mirroring_shift(v, size);
+  }
+  else if (algo == 2)
+  {
+    hp2p_algo_bisection(v, size);
   }
   else
   {
-    hp2p_algo_mirroring_shift(v, size);
+    hp2p_algo_random(v, size);
   }
 }
 
@@ -93,4 +97,17 @@ void hp2p_algo_mirroring_shift(int *v, int size)
     v[i] = (size + 1 - i + init) % size;
   }
   init++;
+}
+
+void hp2p_algo_bisection(int *v, int size)
+{
+  int i = 0;
+  // Always the same draw
+  for (i = 0; i < size / 2; i++)
+  {
+    v[i] = (size / 2) + i;
+    v[(size / 2) + i] = i;
+  }
+  if (size % 2 > 0)
+    v[size - 1] = size - 1;
 }
