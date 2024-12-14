@@ -22,10 +22,7 @@
 
 #include "hp2p.h"
 
-const char *hp2p_algo[] = {
-    "random",
-    "mirror shift",
-};
+const char *hp2p_algo[] = {"random", "mirror shift", "bisection"};
 
 /**
  * \fn     void hp2p_set_default_config(config *conf)
