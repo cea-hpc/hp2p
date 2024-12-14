@@ -134,7 +134,8 @@ void hp2p_util_display_help(char command[])
   printf("   -a align           Alignment size for MPI buffer (default=8)\n");
   printf("   -t max_time        Max duration\n");
   printf("   -c build           Algorithm to build couple\n");
-  printf("                      (random = 0 (default), mirroring shift = 1)\n");
+  printf("                      (random = 0 (default), mirroring shift = 1,\n");
+  printf("                       bisection = 2)\n");
   printf(
       "   -r seed            Seed for initializing random number generators\n");
   printf("                      (default = 0, using time = -1)\n");
