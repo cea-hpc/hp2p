@@ -43,3 +43,4 @@ src/*.bin
 src/*.bin
 *.html
 *.png
+*.core
