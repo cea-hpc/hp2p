@@ -79,7 +79,7 @@ AC_ARG_WITH([cuda],
 AS_CASE([$enable_cuda],
 	[yes], [build_cuda=yes])
 
--# Checks for ROCm
+# Checks for ROCm
 AC_ARG_ENABLE([rocm],
               [AS_HELP_STRING([--enable-rocm],
                                          [Enable ROCm benchmarks])

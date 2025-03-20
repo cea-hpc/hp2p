@@ -147,6 +147,7 @@ int hp2p_algo_get_num();
 char *hp2p_algo_get_name(int algo);
 void hp2p_algo_build_couples(int *v, int size, int algo);
 void hp2p_algo_mirroring_shift(int *v, int size);
+void hp2p_algo_bisection(int *v, int size);
 void hp2p_algo_random(int *v, int size);
 
 // hp2p_util

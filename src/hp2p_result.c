@@ -189,7 +189,7 @@ void hp2p_result_update(hp2p_result *result)
     if (result->g_bsbw[i] < result->min_bsbw)
       result->min_bsbw = result->g_bsbw[i];
   }
-  result->avg_bsbw = result->sum_bsbw / (result->current_iteration + 1);
+  result->avg_bsbw = result->sum_bsbw / (result->current_iteration);
   for (i = 0; i < result->current_iteration; i++)
     result->stdd_bsbw += (result->g_bsbw[i] - result->avg_bsbw) *
 			 (result->g_bsbw[i] - result->avg_bsbw);
